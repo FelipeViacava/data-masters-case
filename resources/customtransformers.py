@@ -9,7 +9,7 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
         print_cols: default = False. Determine whether the fit function should print the constant columns' names.
         """
         self.print_cols = print_cols
-        return self
+        pass
 
     def fit(self, X, y=None):
         """
@@ -43,7 +43,7 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         print_cols: default = False. Determine whether the fit function should print the duplicate columns' names.
         """
         self.print_cols = print_cols
-        return self
+        pass
 
     def fit(self, X, y=None):
         """
@@ -54,16 +54,16 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         regular_columns = []
         duplicate_columns = []
         for col0 in X.columns:
+            if col0 not in duplicate_columns:
+                regular_columns.append(col0)
             for col1 in X.columns:
                 if (col0 != col1):
                     if X[col0].equals(X[col1]):
-                        if col0 not in duplicate_columns:
-                            regular_columns.append(col0)
                         if col1 not in regular_columns:
                             duplicate_columns.append(col1)
         self.duplicate_cols = duplicate_columns
         if self.print_cols:
-            print(f"{len(duplicate_columns)} were found.")
+            print(f"{len(duplicate_columns)} duplicate columns were found.")
         return self
     
     def transform(self, X):
@@ -72,4 +72,4 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         Returns dataset without the duplicate columns found in the fit function.
         """ 
         X_ = X.copy()
-        return X.drop(self.duplicate_cols,axis=1)
+        return X_.drop(self.duplicate_cols,axis=1)

@@ -73,3 +73,36 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         """ 
         X_ = X.copy()
         return X_.drop(self.duplicate_cols,axis=1)
+    
+class AddNonZeroCount(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in sklearn.compose.ColumnTransformer object.
+    """
+    def __init__(self, prefix):
+        """
+        prefix: subset of variables for non-zero count.
+        """
+        self.prefix = prefix
+        pass
+
+    def fit(self, X, y=None):
+        """
+        X: dataset whose "prefix" variables different than 0 should be counted.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be removed in the transform function.
+        """
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if col.startswith(self.prefix)
+        ]
+        return self
+    
+    def transform(self, X):
+        """
+        X: dataset whose "prefix" variables different than 0 should be counted.
+        Returns dataset without the constant columns found in the fit function.
+        """  
+        X_ = X.copy()
+        X_[f"{self.prefix}nonzerocount"] = X_[self.prefix_cols].applymap(lambda x: 1 if x != 0 else 0).sum(axis=1)
+        return X_

@@ -53,10 +53,11 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         """
         regular_columns = []
         duplicate_columns = []
-        for col0 in X.columns:
+        sorted_cols = sorted(X.columns)
+        for col0 in sorted_cols:
             if col0 not in duplicate_columns:
                 regular_columns.append(col0)
-            for col1 in X.columns:
+            for col1 in sorted_cols:
                 if (col0 != col1):
                     if X[col0].equals(X[col1]):
                         if col1 not in regular_columns:

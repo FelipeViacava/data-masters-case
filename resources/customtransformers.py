@@ -110,7 +110,7 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
         Returns dataset without the constant columns found in the fit function.
         """  
         X_ = X.copy()
-        X_[f"{self.prefix}nonzerocount"] = X_[self.prefix_cols].applymap(lambda x: 1 if x != 0 else 0).sum(axis=1)
+        X_[f"none_zero_count_{self.prefix}"] = X_[self.prefix_cols].applymap(lambda x: 1 if x != 0 else 0).sum(axis=1)
         return X_
     
 class AddNoneCount(BaseEstimator, TransformerMixin):
@@ -122,11 +122,10 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
             prefix="",
             fake_value=None,
             ignore=[],
-            replace_none=False,
-            replace_with=None
+            drop_constant=False,
         ):
         """
-        prefix: subset of variables for none count starting with this string
+        prefix: subset of variables for none count starting with this string.
         fake_value: values inserted to replace None.
         ignore: list of columns with prefix to ignore.
         replace_none: whether columns with
@@ -134,13 +133,12 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         self.prefix = prefix
         self.fake_value = fake_value
         self.ignore = ignore
-        self.replace_none = replace_none
-        self.replace_with = replace_with
+        self.drop_constant = drop_constant
         pass
 
     def fit(self, X, y=None):
         """
-        X: dataset whose "prefix" variables different than 0 should be counted.
+        X: dataset whose "prefix" variables' null values should be counted.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
         Creates class atributte with the names of the columns to be removed in the transform function.
         """
@@ -152,19 +150,25 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
                     & (col not in self.ignore)
             )
         ]
+        if self.drop_constant:
+            X_ = X.copy()
+            X_[self.prefix_cols] = X_[self.prefix_cols] \
+                .applymap(lambda x: None if x == self.fake_value else x)
+            self.constant_cols = [
+                col for col in X_.columns if X_[col].nunique() == 1
+            ]
         return self
     
     def transform(self, X):
         """
-        X: dataset whose "prefix" variables different than 0 should be counted.
+        X: dataset to apply transformation on.
         Returns dataset without the constant columns found in the fit function.
         """  
         X_ = X.copy()
-        X_[f"{self.prefix}nonecount"] = X_[self.prefix_cols] \
+        X_[f"none_count_{self.prefix}"] = X_[self.prefix_cols] \
             .applymap(lambda x: None if x == self.fake_value else x) \
             .isnull() \
             .sum(axis=1)
-        if self.replace_none:
-            X_[self.prefix_cols] = X_[self.prefix_cols] \
-                .applymap(lambda x: self.replace_with if x == self.fake_value else x)
+        if self.drop_constant:
+            X_ = X_.drop(self.constant_cols, axis=1)
         return X_

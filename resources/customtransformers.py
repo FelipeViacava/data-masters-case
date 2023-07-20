@@ -73,7 +73,7 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         Returns dataset without the duplicate columns found in the fit function.
         """ 
         X_ = X.copy()
-        return X_.drop(self.duplicate_cols,axis=1)
+        return X_.drop(self.duplicate_cols, axis=1)
     
 class AddNonZeroCount(BaseEstimator, TransformerMixin):
     """

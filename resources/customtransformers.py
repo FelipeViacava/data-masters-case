@@ -1,5 +1,31 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
+class CustomImputer(BaseEstimator, TransformerMixin):
+    """
+    This class should be used as a step in a sklearn pipeline
+    """
+    def __init__(self, prefix, value):
+        self.prefix = prefix
+        self.value = value
+        pass
+
+    def fit(self, X, y=None):
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if (
+                    (col.startswith(self.prefix))
+                    & (col not in self.ignore)
+            )
+        ]
+        return self
+    
+    def transform(self, X):
+        X_ = X.copy()
+        X_[self.prefix_cols] = X_[self.prefix_cols] \
+            .applymap(lambda x: self.value if x == None else x)
+        return X_
+
 class DropConstantColumns(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.compose.ColumnTransformer object.

@@ -261,8 +261,3 @@ class AvgOverNonZero(BaseEstimator, TransformerMixin):
         X_ = X.copy()
         X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / (X_[f"non_zero_count_{self.prefix}"]+1)
         return X_
-    
-class NotZeroFlag(BaseEstimator, TransformerMixin):
-    def __init__(self, col):
-        pass
-    

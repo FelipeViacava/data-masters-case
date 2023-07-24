@@ -12,12 +12,7 @@ def histplot(df,var,nbins=25):
     plt.show()
 
 def lineplot(df,var):
-    pd.crosstab(df[var], df["TARGET"]) \
-        .div(
-            pd.crosstab(df[var], df["TARGET"]).sum(axis=1),
-            axis=0
-        ) \
-        [1] \
+    df.groupby(var)["TARGET"].mean() \
         .plot \
         .line()
 

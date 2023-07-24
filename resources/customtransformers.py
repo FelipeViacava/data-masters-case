@@ -143,13 +143,14 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.compose.ColumnTransformer object.
     """
-    def __init__(self, prefix="", ignore=[]):
+    def __init__(self, prefix="", ignore=[], fake_value=None):
         """
         prefix: subset of variables for non-zero count.
         ignore: list of columns to ignore
         """
         self.prefix = prefix
         self.ignore = ignore
+        self.fake_value = fake_value
         pass
 
     def fit(self, X, y=None):
@@ -174,7 +175,16 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
         Returns dataset without the constant columns found in the fit function.
         """  
         X_ = X.copy()
-        X_[f"non_zero_count_{self.prefix}"] = X_[self.prefix_cols].applymap(lambda x: 1 if x != 0 else 0).sum(axis=1)
+        X_[f"non_zero_count_{self.prefix}"] = X_[self.prefix_cols] \
+            .applymap(lambda x:
+                1
+                if (
+                    (x != 0)
+                    & (x != self.fake_value)
+                )
+                else 0
+            ) \
+            .sum(axis=1)
         return X_
     
 class AddNoneCount(BaseEstimator, TransformerMixin):
@@ -251,3 +261,8 @@ class AvgOverNonZero(BaseEstimator, TransformerMixin):
         X_ = X.copy()
         X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / (X_[f"non_zero_count_{self.prefix}"]+1)
         return X_
+    
+class NotZeroFlag(BaseEstimator, TransformerMixin):
+    def __init__(self, col):
+        pass
+    

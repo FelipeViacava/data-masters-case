@@ -1,15 +1,19 @@
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import \
+    train_test_split, \
+    GridSearchCV, \
+    StratifiedKFold
 from scipy.optimize import minimize_scalar
 import pandas as pd
+import pickle
 import numpy as np
 
-class CustomModel:
+class FitValidateRefit:
     def __init__(self,
                  dataframe,
                  pipeline,
                  target_column,
                  param_grid=None,
-                 test_size=0.2,
+                 test_size=0.25,
                  use_grid_search=True):
         self.data = dataframe
         self.pipeline = pipeline
@@ -25,6 +29,7 @@ class CustomModel:
             X,
             y,
             test_size=self.test_size,
+            stratify=y,
             random_state=42
         )
 
@@ -33,10 +38,14 @@ class CustomModel:
         tp = np.sum((predictions == 1) & (self.y_val == 1))
         fp = np.sum((predictions == 1) & (self.y_val == 0))
         n = len(self.y_val)
-        return (-10 * fp + 90 * tp) / n
+        return -(-10 * fp + 90 * tp) / n
 
     def _optimize_threshold(self):
-        result = minimize_scalar(self._custom_metric, bounds=(0, 1), method='bounded')
+        result = minimize_scalar(
+            self._custom_metric,
+            bounds=(0, 1),
+            method='bounded'
+        )
         self.optimal_threshold = result.x
 
     def fit(self):
@@ -45,7 +54,18 @@ class CustomModel:
 
         if self.use_grid_search:
             # Perform GridSearchCV to find the best parameters that maximize AUC
-            grid_search = GridSearchCV(self.pipeline, self.param_grid, scoring='roc_auc', cv=5)
+            stratified_kfold = StratifiedKFold(
+                n_splits=5,
+                shuffle=True,
+                random_state=42
+            )
+            grid_search = GridSearchCV(
+                self.pipeline,
+                self.param_grid,
+                scoring='roc_auc',
+                cv=stratified_kfold,
+                n_jobs=12,
+            )
             grid_search.fit(self.X_train, self.y_train)
             # Use the best estimator found by GridSearchCV
             self.pipeline.set_params(**grid_search.best_params_)
@@ -75,3 +95,12 @@ class CustomModel:
 
     def get_optimal_threshold(self):
         return self.optimal_threshold
+
+    def save_model(self, filename):
+        with open(filename, 'wb') as file:
+            pickle.dump(self, file)
+
+    @staticmethod
+    def load_model(filename):
+        with open(filename, 'rb') as file:
+            return pickle.load(file)

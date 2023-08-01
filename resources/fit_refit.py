@@ -93,9 +93,6 @@ class FitValidateRefit:
     def predict_proba(self, X):
         return self.pipeline.predict_proba(X)
 
-    def get_optimal_threshold(self):
-        return self.optimal_threshold
-
     def save_model(self, filename):
         with open(filename, 'wb') as file:
             pickle.dump(self, file)

@@ -1,15 +1,34 @@
 from sklearn.base import BaseEstimator, TransformerMixin
+from typing import Union
+import pandas as pd
+from sklearn.pipeline import Pipeline
 
 class CustomImputer(BaseEstimator, TransformerMixin):
     """
-    This class should be used as a step in a sklearn pipeline
+    This class is made to work as a step in a sklearn.pipeline.Pipeline object.
+    It imputes values in a pandas dataframe object based on the columns prefix.
     """
-    def __init__(self, prefix, value):
+    def __init__(self, prefix: str, to_replace: Union[int, float, str],
+                 replace_with: Union[int, float, str] = None, ignore: list[str] = None) -> None:
+        """
+        prefix: prefix of the columns to be imputed.
+        to_replace: value to be replaced.
+        replace_with: value to replace "to_replace" with.
+        ignore: list of columns to ignore.
+        Initiates de class.
+        """
         self.prefix = prefix
-        self.value = value
+        self.to_replace = to_replace
+        self.replace_with = replace_with
+        self.ignore = ignore
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: Union[pd.DataFrame, pd.Series], y: None = None) -> None:
+        """
+        X: dataset whose columns with "prefix" should be imputed.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be imputed in the transform function.
+        """
         self.prefix_cols = [
             col
             for col in X.columns
@@ -20,24 +39,33 @@ class CustomImputer(BaseEstimator, TransformerMixin):
         ]
         return self
     
-    def transform(self, X):
+    def transform(self, X: Union[pd.DataFrame, pd.Series]) -> Union[pd.DataFrame, pd.Series]:
+        """
+        X: dataset whose columns with "prefix" should be imputed.
+        Returns dataset with the imputed columns.
+        """
         X_ = X.copy()
         X_[self.prefix_cols] = X_[self.prefix_cols] \
-            .applymap(lambda x: self.value if x == None else x)
+            .applymap(lambda x: self.replace_with if x == self.to_replace else x)
         return X_
 
 class DropConstantColumns(BaseEstimator, TransformerMixin):
     """
-    This class is made to work as a step in sklearn.compose.ColumnTransformer object.
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It drops constant columns from a pandas dataframe object.
+    Important: the constant columns are found in the fit function and dropped in the transform function.
     """
-    def __init__(self, print_cols=False):
+    def __init__(self, print_cols: bool = False, ignore: list[str] = []) -> None:
         """
         print_cols: default = False. Determine whether the fit function should print the constant columns' names.
+        ignore: list of columns to ignore.
+        Initiates the class.
         """
         self.print_cols = print_cols
+        self.ignore = ignore
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame , y: None = None) -> None:
         """
         X: dataset whose constant columns should be removed.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
@@ -46,32 +74,38 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
         self.constant_cols = [
             col
             for col in X.columns
-            if X[col].nunique() == 1
+            if (
+                (X[col].nunique() == 1)
+                & (col not in self.ignore)
+            )
         ]
         if self.print_cols:
             print(f"{len(self.constant_cols)} constant columns were found")
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         X: dataset whose constant columns should be removed.
         Returns dataset without the constant columns found in the fit function.
-        """  
-        X_ = X.copy()
-        return X_.drop(self.constant_cols, axis=1)
+        """
+        return X.copy().drop(self.constant_cols, axis=1)
 
 class DropDuplicateColumns(BaseEstimator, TransformerMixin):
     """
-    This class is made to work as a step in sklearn.compose.ColumnTransformer object.
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It drops duplicate columns from a pandas dataframe object.
+    Important: the duplicate columns are found in the fit function and dropped in the transform function.
     """
-    def __init__(self, print_cols=False):
+    def __init__(self, print_cols: bool = False, ignore: list[str] = []) -> None:
         """
         print_cols: default = False. Determine whether the fit function should print the duplicate columns' names.
+        ignore: list of columns to ignore.
+        Initiates the class.
         """
         self.print_cols = print_cols
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
         """
         X: dataset whose duplicate columns should be removed.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
@@ -93,7 +127,7 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
             print(f"{len(duplicate_columns)} duplicate columns were found.")
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         X: dataset whose duplicate columns should be removed.
         Returns dataset without the duplicate columns found in the fit function.
@@ -102,21 +136,27 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         return X_.drop(self.duplicate_cols, axis=1)
 
 class CustomSum(BaseEstimator, TransformerMixin):
-    def __init__(self, prefix="", ignore=[], fake_value=None):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It sums columns from a pandas dataframe object based on the columns prefix.
+    """
+    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
         """
-        prefix: subset of variables to sum.
-        ignore: list of columns to ignore
+        prefix: prefix of the columns to be summed.
+        ignore: list of columns to ignore.
+        fake_value: value to be replaced with None.
+        Initiates de class.
         """
         self.prefix = prefix
         self.ignore = ignore
         self.fake_value = fake_value
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
         """
-        X: dataset whose "prefix" variables should be summed.
+        X: dataset whose columns with "prefix" should be summed.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be removed in the transform function.
+        Creates class atributte with the names of the columns to be summed in the transform function.
         """
         self.prefix_cols = [
             col
@@ -128,10 +168,10 @@ class CustomSum(BaseEstimator, TransformerMixin):
         ]
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         X: dataset whose "prefix" variables should be summed.
-        Returns dataset without the constant columns found in the fit function.
+        Returns dataset with new column with the sum of the "prefix" variables.
         """  
         X_ = X.copy()
         X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
@@ -141,23 +181,26 @@ class CustomSum(BaseEstimator, TransformerMixin):
 
 class AddNonZeroCount(BaseEstimator, TransformerMixin):
     """
-    This class is made to work as a step in sklearn.compose.ColumnTransformer object.
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
     """
-    def __init__(self, prefix="", ignore=[], fake_value=None):
+    def __init__(self, prefix: str = "", ignore: list[str] = [],
+                 fake_value: Union[int, float, str] = None) -> None:
         """
-        prefix: subset of variables for non-zero count.
-        ignore: list of columns to ignore
+        prefix: prefix of the columns to be summed.
+        ignore: list of columns to ignore.
+        fake_value: value to be replaced with None.
+        Initiates de class.
         """
         self.prefix = prefix
         self.ignore = ignore
         self.fake_value = fake_value
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
         """
         X: dataset whose "prefix" variables different than 0 should be counted.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be removed in the transform function.
+        Creates class atributte with the names of the columns whose not 0 values should be counted in the transform function.
         """
         self.prefix_cols = [
             col
@@ -169,10 +212,10 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
         ]
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        X: dataset whose "prefix" variables different than 0 should be counted.
-        Returns dataset without the constant columns found in the fit function.
+        X: dataset whose "prefix" variables' not 0 values should be counted.
+        Returns dataset with new column with the count of the "prefix" variables' not 0 values.
         """  
         X_ = X.copy()
         X_[f"non_zero_count_{self.prefix}"] = X_[self.prefix_cols] \
@@ -189,20 +232,15 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
     
 class AddNoneCount(BaseEstimator, TransformerMixin):
     """
-    This class is made to work as a step in sklearn.compose.ColumnTransformer object.
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
     """
-    def __init__(
-            self,
-            prefix="",
-            fake_value=None,
-            ignore=[],
-            drop_constant=False,
-        ):
+    def __init__(self, prefix: str = "", fake_value: Union[int, float, str] = None,
+                 ignore: list[str] = [], drop_constant: bool = False) -> None:
         """
         prefix: subset of variables for none count starting with this string.
         fake_value: values inserted to replace None.
         ignore: list of columns with prefix to ignore.
-        replace_none: whether columns with
+        drop_constant: whether to drop columns that would become constant without missing features or not.
         """
         self.prefix = prefix
         self.fake_value = fake_value
@@ -210,11 +248,11 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         self.drop_constant = drop_constant
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
         """
         X: dataset whose "prefix" variables' null values should be counted.
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be removed in the transform function.
+        Creates class atributte with the names of the columns whose null values should be counted in the transform function.
         """
         self.prefix_cols = [
             col
@@ -233,10 +271,10 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
             ]
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         X: dataset to apply transformation on.
-        Returns dataset without the constant columns found in the fit function.
+        Returns dataset with new column with the count of the "prefix" variables' null values.
         """  
         X_ = X.copy()
         X_[f"none_count_{self.prefix}"] = X_[self.prefix_cols] \
@@ -248,16 +286,32 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         return X_
     
 class AvgOverNonZero(BaseEstimator, TransformerMixin):
-    def __init__(self, prefix):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    """
+    def __init__(self, prefix: str = "") -> None:
+        """
+        prefix: prefix of the columns to be summed.
+        Initiates de class.
+        """
         self.sum_col = f"sum_of_{prefix}",
         self.count_col = f"non_zero_count_{prefix}",
         self.prefix = prefix
         pass
 
-    def fit(self, X, y=None):
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
+        """
+        X: dataset whose "prefix" variables should be averaged.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be averaged in the transform function.
+        """
         return self
     
-    def transform(self, X):
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        X: dataset whose "prefix" variables should be averaged.
+        Returns dataset with new column with the average of the "prefix" variables.
+        """
         X_ = X.copy()
         X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / (X_[f"non_zero_count_{self.prefix}"]+1)
         return X_

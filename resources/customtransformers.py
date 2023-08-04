@@ -1,7 +1,6 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import Union
 import pandas as pd
-from sklearn.pipeline import Pipeline
 
 class DropConstantColumns(BaseEstimator, TransformerMixin):
     """

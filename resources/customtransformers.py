@@ -3,52 +3,6 @@ from typing import Union
 import pandas as pd
 from sklearn.pipeline import Pipeline
 
-class CustomImputer(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in a sklearn.pipeline.Pipeline object.
-    It imputes values in a pandas dataframe object based on the columns prefix.
-    """
-    def __init__(self, prefix: str, to_replace: Union[int, float, str],
-                 replace_with: Union[int, float, str] = None, ignore: list[str] = None) -> None:
-        """
-        prefix: prefix of the columns to be imputed.
-        to_replace: value to be replaced.
-        replace_with: value to replace "to_replace" with.
-        ignore: list of columns to ignore.
-        Initiates de class.
-        """
-        self.prefix = prefix
-        self.to_replace = to_replace
-        self.replace_with = replace_with
-        self.ignore = ignore
-        pass
-
-    def fit(self, X: Union[pd.DataFrame, pd.Series], y: None = None) -> None:
-        """
-        X: dataset whose columns with "prefix" should be imputed.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be imputed in the transform function.
-        """
-        self.prefix_cols = [
-            col
-            for col in X.columns
-            if (
-                    (col.startswith(self.prefix))
-                    & (col not in self.ignore)
-            )
-        ]
-        return self
-    
-    def transform(self, X: Union[pd.DataFrame, pd.Series]) -> Union[pd.DataFrame, pd.Series]:
-        """
-        X: dataset whose columns with "prefix" should be imputed.
-        Returns dataset with the imputed columns.
-        """
-        X_ = X.copy()
-        X_[self.prefix_cols] = X_[self.prefix_cols] \
-            .applymap(lambda x: self.replace_with if x == self.to_replace else x)
-        return X_
-
 class DropConstantColumns(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
@@ -135,50 +89,6 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         X_ = X.copy()
         return X_.drop(self.duplicate_cols, axis=1)
 
-class CustomSum(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in sklearn.pipeline.Pipeline object.
-    It sums columns from a pandas dataframe object based on the columns prefix.
-    """
-    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
-        """
-        prefix: prefix of the columns to be summed.
-        ignore: list of columns to ignore.
-        fake_value: value to be replaced with None.
-        Initiates de class.
-        """
-        self.prefix = prefix
-        self.ignore = ignore
-        self.fake_value = fake_value
-        pass
-
-    def fit(self, X: pd.DataFrame, y: None = None) -> None:
-        """
-        X: dataset whose columns with "prefix" should be summed.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be summed in the transform function.
-        """
-        self.prefix_cols = [
-            col
-            for col in X.columns
-            if (
-                    (col.startswith(self.prefix))
-                    & (col not in self.ignore)
-            )
-        ]
-        return self
-    
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        X: dataset whose "prefix" variables should be summed.
-        Returns dataset with new column with the sum of the "prefix" variables.
-        """  
-        X_ = X.copy()
-        X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
-            .applymap(lambda x: None if x == self.fake_value else x) \
-            .sum(axis=1)
-        return X_
-
 class AddNonZeroCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
@@ -229,7 +139,97 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
             ) \
             .sum(axis=1)
         return X_
+
+class CustomImputer(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in a sklearn.pipeline.Pipeline object.
+    It imputes values in a pandas dataframe object based on the columns prefix.
+    """
+    def __init__(self, prefix: str, to_replace: Union[int, float, str],
+                 replace_with: Union[int, float, str] = None, ignore: list[str] = None) -> None:
+        """
+        prefix: prefix of the columns to be imputed.
+        to_replace: value to be replaced.
+        replace_with: value to replace "to_replace" with.
+        ignore: list of columns to ignore.
+        Initiates de class.
+        """
+        self.prefix = prefix
+        self.to_replace = to_replace
+        self.replace_with = replace_with
+        self.ignore = ignore
+        pass
+
+    def fit(self, X: Union[pd.DataFrame, pd.Series], y: None = None) -> None:
+        """
+        X: dataset whose columns with "prefix" should be imputed.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be imputed in the transform function.
+        """
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if (
+                    (col.startswith(self.prefix))
+                    & (col not in self.ignore)
+            )
+        ]
+        return self
     
+    def transform(self, X: Union[pd.DataFrame, pd.Series]) -> Union[pd.DataFrame, pd.Series]:
+        """
+        X: dataset whose columns with "prefix" should be imputed.
+        Returns dataset with the imputed columns.
+        """
+        X_ = X.copy()
+        X_[self.prefix_cols] = X_[self.prefix_cols] \
+            .applymap(lambda x: self.replace_with if x == self.to_replace else x)
+        return X_
+
+class CustomSum(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It sums columns from a pandas dataframe object based on the columns prefix.
+    """
+    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
+        """
+        prefix: prefix of the columns to be summed.
+        ignore: list of columns to ignore.
+        fake_value: value to be replaced with None.
+        Initiates de class.
+        """
+        self.prefix = prefix
+        self.ignore = ignore
+        self.fake_value = fake_value
+        pass
+
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
+        """
+        X: dataset whose columns with "prefix" should be summed.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be summed in the transform function.
+        """
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if (
+                    (col.startswith(self.prefix))
+                    & (col not in self.ignore)
+            )
+        ]
+        return self
+    
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        X: dataset whose "prefix" variables should be summed.
+        Returns dataset with new column with the sum of the "prefix" variables.
+        """  
+        X_ = X.copy()
+        X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
+            .applymap(lambda x: None if x == self.fake_value else x) \
+            .sum(axis=1)
+        return X_
+ 
 class AddNoneCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.

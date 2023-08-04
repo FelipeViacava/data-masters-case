@@ -140,6 +140,82 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
             .sum(axis=1)
         return X_
 
+class CustomSum(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It sums columns from a pandas dataframe object based on the columns prefix.
+    """
+    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
+        """
+        prefix: prefix of the columns to be summed.
+        ignore: list of columns to ignore.
+        fake_value: value to be replaced with None.
+        Initiates de class.
+        """
+        self.prefix = prefix
+        self.ignore = ignore
+        self.fake_value = fake_value
+        pass
+
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
+        """
+        X: dataset whose columns with "prefix" should be summed.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be summed in the transform function.
+        """
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if (
+                    (col.startswith(self.prefix))
+                    & (col not in self.ignore)
+            )
+        ]
+        return self
+    
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        X: dataset whose "prefix" variables should be summed.
+        Returns dataset with new column with the sum of the "prefix" variables.
+        """  
+        X_ = X.copy()
+        X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
+            .applymap(lambda x: None if x == self.fake_value else x) \
+            .sum(axis=1)
+        return X_
+
+class CustomAverage(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    Must be used after CustomSum and CustomNonZeroCount for each prefix.
+    """
+    def __init__(self, prefix: str = "") -> None:
+        """
+        prefix: prefix of the columns to be averaged.
+        Initiates de class.
+        """
+        self.sum_col = f"sum_of_{prefix}",
+        self.count_col = f"non_zero_count_{prefix}",
+        self.prefix = prefix
+        pass
+
+    def fit(self, X: pd.DataFrame, y: None = None) -> None:
+        """
+        X: dataset whose "prefix" variables should be averaged.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the names of the columns to be averaged in the transform function.
+        """
+        return self
+    
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        X: dataset whose "prefix" variables should be averaged.
+        Returns dataset with new column with the average of the "prefix" variables.
+        """
+        X_ = X.copy()
+        X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / X_[f"non_zero_count_{self.prefix}"]
+        return X_
+
 class CustomImputer(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in a sklearn.pipeline.Pipeline object.
@@ -184,50 +260,6 @@ class CustomImputer(BaseEstimator, TransformerMixin):
         X_ = X.copy()
         X_[self.prefix_cols] = X_[self.prefix_cols] \
             .applymap(lambda x: self.replace_with if x == self.to_replace else x)
-        return X_
-
-class CustomSum(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in sklearn.pipeline.Pipeline object.
-    It sums columns from a pandas dataframe object based on the columns prefix.
-    """
-    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
-        """
-        prefix: prefix of the columns to be summed.
-        ignore: list of columns to ignore.
-        fake_value: value to be replaced with None.
-        Initiates de class.
-        """
-        self.prefix = prefix
-        self.ignore = ignore
-        self.fake_value = fake_value
-        pass
-
-    def fit(self, X: pd.DataFrame, y: None = None) -> None:
-        """
-        X: dataset whose columns with "prefix" should be summed.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be summed in the transform function.
-        """
-        self.prefix_cols = [
-            col
-            for col in X.columns
-            if (
-                    (col.startswith(self.prefix))
-                    & (col not in self.ignore)
-            )
-        ]
-        return self
-    
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        X: dataset whose "prefix" variables should be summed.
-        Returns dataset with new column with the sum of the "prefix" variables.
-        """  
-        X_ = X.copy()
-        X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
-            .applymap(lambda x: None if x == self.fake_value else x) \
-            .sum(axis=1)
         return X_
  
 class AddNoneCount(BaseEstimator, TransformerMixin):
@@ -283,35 +315,4 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
             .sum(axis=1)
         if self.drop_constant:
             X_ = X_.drop(self.constant_cols, axis=1)
-        return X_
-    
-class AvgOverNonZero(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in sklearn.pipeline.Pipeline object.
-    """
-    def __init__(self, prefix: str = "") -> None:
-        """
-        prefix: prefix of the columns to be summed.
-        Initiates de class.
-        """
-        self.sum_col = f"sum_of_{prefix}",
-        self.count_col = f"non_zero_count_{prefix}",
-        self.prefix = prefix
-        pass
-
-    def fit(self, X: pd.DataFrame, y: None = None) -> None:
-        """
-        X: dataset whose "prefix" variables should be averaged.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be averaged in the transform function.
-        """
-        return self
-    
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        X: dataset whose "prefix" variables should be averaged.
-        Returns dataset with new column with the average of the "prefix" variables.
-        """
-        X_ = X.copy()
-        X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / (X_[f"non_zero_count_{self.prefix}"]+1)
         return X_

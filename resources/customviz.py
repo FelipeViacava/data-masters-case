@@ -19,6 +19,20 @@ def lineplot(df,var):
     plt.title(f"Proportion of TARGET=1 by {var}")
     plt.show()
 
+def binaryhistplot(df,var, nbins=25):
+    sns.histplot(
+        df,
+        x=var,
+        hue="TARGET",
+        element="step",
+        stat="density",
+        common_norm=False,
+        common_bins=True,
+        bins=nbins
+    )
+    plt.title(f"Distribution of {var} var by TARGET")
+    plt.show()
+
 def violinplot(df,var):
     sns.violinplot(
         df,

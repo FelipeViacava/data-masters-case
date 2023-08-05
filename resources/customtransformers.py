@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from typing import Union
 import pandas as pd
+import numpy as np
 
 class DropConstantColumns(BaseEstimator, TransformerMixin):
     """
@@ -178,7 +179,7 @@ class CustomImputer(BaseEstimator, TransformerMixin):
     It imputes values in a pandas dataframe object based on the columns prefix.
     """
     def __init__(self, prefix: str, to_replace: Union[int, float, str],
-                 replace_with: Union[int, float, str] = None, ignore: list[str] = []) -> None:
+                 replace_with: Union[int, float, str] = np.nan, ignore: list[str] = []) -> None:
         """
         prefix: prefix of the columns to be imputed.
         to_replace: value to be replaced.
@@ -215,15 +216,14 @@ class CustomImputer(BaseEstimator, TransformerMixin):
         """
         X_ = X.copy()
         X_[self.prefix_cols] = X_[self.prefix_cols] \
-            .applymap(lambda x: self.replace_with if x == self.to_replace else x)
+            .replace(self.to_replace, self.replace_with)
         return X_
  
 class AddNoneCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
     """
-    def __init__(self, prefix: str = "", fake_value: Union[int, float, str] = None,
-                 ignore: list[str] = [], drop_constant: bool = False) -> None:
+    def __init__(self, prefix: str = "", ignore: list[str] = []) -> None:
         """
         prefix: subset of variables for none count starting with this string.
         fake_value: values inserted to replace None.
@@ -231,9 +231,7 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         drop_constant: whether to drop columns that would become constant without missing features or not.
         """
         self.prefix = prefix
-        self.fake_value = fake_value
         self.ignore = ignore
-        self.drop_constant = drop_constant
         pass
 
     def fit(self, X: pd.DataFrame, y: None = None) -> None:
@@ -250,13 +248,6 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
                     & (col not in self.ignore)
             )
         ]
-        if self.drop_constant:
-            X_ = X.copy()
-            X_[self.prefix_cols] = X_[self.prefix_cols] \
-                .applymap(lambda x: None if x == self.fake_value else x)
-            self.constant_cols = [
-                col for col in X_.columns if X_[col].nunique() == 1
-            ]
         return self
     
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -266,9 +257,6 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         """  
         X_ = X.copy()
         X_[f"none_count_{self.prefix}"] = X_[self.prefix_cols] \
-            .applymap(lambda x: None if x == self.fake_value else x) \
             .isnull() \
             .sum(axis=1)
-        if self.drop_constant:
-            X_ = X_.drop(self.constant_cols, axis=1)
         return X_

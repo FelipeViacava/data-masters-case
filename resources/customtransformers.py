@@ -92,8 +92,7 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
     """
-    def __init__(self, prefix: str = "", ignore: list[str] = [],
-                 fake_value: Union[int, float, str] = None) -> None:
+    def __init__(self, prefix: str = "", ignore: list[str] = []) -> None:
         """
         prefix: prefix of the columns to be summed.
         ignore: list of columns to ignore.
@@ -102,7 +101,6 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
         """
         self.prefix = prefix
         self.ignore = ignore
-        self.fake_value = fake_value
         pass
 
     def fit(self, X: pd.DataFrame, y: None = None) -> None:
@@ -128,14 +126,7 @@ class AddNonZeroCount(BaseEstimator, TransformerMixin):
         """  
         X_ = X.copy()
         X_[f"non_zero_count_{self.prefix}"] = X_[self.prefix_cols] \
-            .applymap(lambda x:
-                1
-                if (
-                    (x != 0)
-                    & (x != self.fake_value)
-                )
-                else 0
-            ) \
+            .applymap(lambda x: 0 if ((x == 0) | (x == None)) else 1) \
             .sum(axis=1)
         return X_
 
@@ -144,7 +135,7 @@ class CustomSum(BaseEstimator, TransformerMixin):
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
     It sums columns from a pandas dataframe object based on the columns prefix.
     """
-    def __init__(self, prefix: str = "", ignore: list[str] = [], fake_value: Union[int, float, str] = None) -> None:
+    def __init__(self, prefix: str = "", ignore: list[str] = []) -> None:
         """
         prefix: prefix of the columns to be summed.
         ignore: list of columns to ignore.
@@ -153,7 +144,6 @@ class CustomSum(BaseEstimator, TransformerMixin):
         """
         self.prefix = prefix
         self.ignore = ignore
-        self.fake_value = fake_value
         pass
 
     def fit(self, X: pd.DataFrame, y: None = None) -> None:
@@ -179,40 +169,7 @@ class CustomSum(BaseEstimator, TransformerMixin):
         """  
         X_ = X.copy()
         X_[f"sum_of_{self.prefix}"] = X_[self.prefix_cols] \
-            .applymap(lambda x: None if x == self.fake_value else x) \
             .sum(axis=1)
-        return X_
-
-class CustomAverage(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in sklearn.pipeline.Pipeline object.
-    Must be used after CustomSum and CustomNonZeroCount for each prefix.
-    """
-    def __init__(self, prefix: str = "") -> None:
-        """
-        prefix: prefix of the columns to be averaged.
-        Initiates de class.
-        """
-        self.sum_col = f"sum_of_{prefix}",
-        self.count_col = f"non_zero_count_{prefix}",
-        self.prefix = prefix
-        pass
-
-    def fit(self, X: pd.DataFrame, y: None = None) -> None:
-        """
-        X: dataset whose "prefix" variables should be averaged.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be averaged in the transform function.
-        """
-        return self
-    
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        X: dataset whose "prefix" variables should be averaged.
-        Returns dataset with new column with the average of the "prefix" variables.
-        """
-        X_ = X.copy()
-        X_[f"avg_{self.prefix}"] = X_[f"sum_of_{self.prefix}"] / X_[f"non_zero_count_{self.prefix}"]
         return X_
 
 class CustomImputer(BaseEstimator, TransformerMixin):
@@ -221,7 +178,7 @@ class CustomImputer(BaseEstimator, TransformerMixin):
     It imputes values in a pandas dataframe object based on the columns prefix.
     """
     def __init__(self, prefix: str, to_replace: Union[int, float, str],
-                 replace_with: Union[int, float, str] = None, ignore: list[str] = None) -> None:
+                 replace_with: Union[int, float, str] = None, ignore: list[str] = []) -> None:
         """
         prefix: prefix of the columns to be imputed.
         to_replace: value to be replaced.

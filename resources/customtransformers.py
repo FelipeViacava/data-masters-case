@@ -9,14 +9,14 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
     It drops constant columns from a pandas dataframe object.
     Important: the constant columns are found in the fit function and dropped in the transform function.
     """
-    def __init__(self, print_cols: bool = False, ignore: list[str] = []) -> None:
+    def __init__(self, print_cols: bool = False, also: list[str] = []) -> None:
         """
         print_cols: default = False. Determine whether the fit function should print the constant columns' names.
         ignore: list of columns to ignore.
         Initiates the class.
         """
         self.print_cols = print_cols
-        self.ignore = ignore
+        self.also = also
         pass
 
     def fit(self, X: pd.DataFrame , y: None = None) -> None:
@@ -30,7 +30,7 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
             for col in X.columns
             if (
                 (X[col].nunique() == 1)
-                & (col not in self.ignore)
+                & (col in self.also)
             )
         ]
         if self.print_cols:
@@ -57,6 +57,7 @@ class DropDuplicateColumns(BaseEstimator, TransformerMixin):
         Initiates the class.
         """
         self.print_cols = print_cols
+        self.ignore = ignore
         pass
 
     def fit(self, X: pd.DataFrame, y: None = None) -> None:
@@ -222,6 +223,7 @@ class CustomImputer(BaseEstimator, TransformerMixin):
 class AddNoneCount(BaseEstimator, TransformerMixin):
     """
     This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It counts the number of None values in a pandas dataframe object based on the columns prefix.
     """
     def __init__(self, prefix: str = "", ignore: list[str] = []) -> None:
         """
@@ -259,4 +261,62 @@ class AddNoneCount(BaseEstimator, TransformerMixin):
         X_[f"none_count_{self.prefix}"] = X_[self.prefix_cols] \
             .isnull() \
             .sum(axis=1)
+        return X_
+    
+class CustomEncoder(BaseEstimator, TransformerMixin):
+    """
+    This class is made to work as a step in sklearn.pipeline.Pipeline object.
+    It encodes categorical variables in a pandas dataframe based on the categories mean of the target variable.
+    Unknown values must be defined by the user.
+    """
+    def __init__(self, colname: str) -> None:
+        """
+        labels: dictionary with the labels to be replaced.
+        colname: name of the column to be encoded.
+        Initiates de class.
+        """
+        self.colname = colname
+        pass
+
+    def fit(self, X: pd.DataFrame, y: Union[pd.DataFrame, pd.Series]) -> None:
+        """
+        X: dataset whose column should be encoded.
+        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
+        Creates class atributte with the dictionary to be used in the transform function.
+        """
+        X_ = X.copy().assign(TARGET=y)
+
+        grouped_X_ = X_ \
+            .groupby(self.colname) \
+            .agg({"TARGET": "mean"}) \
+            .sort_values("TARGET", ascending=True)
+        
+        groups = grouped_X_.index
+
+        self.labels ={
+            groups[i]: i
+            for i in range(len(groups))
+        }
+
+        self.most_frequent = X_[self.colname].mode()[0]
+        return self
+    
+    def _apply_map(self, x: Union[int, str]) -> int:
+        """
+        x: value to be replaced.
+        Returns the value to replace "x" with.
+        """
+        if x in self.labels.keys():
+            return self.labels[x]
+        else:
+            return self.labels[self.most_frequent]
+    
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """
+        X: dataset whose column should be encoded.
+        Returns dataset with the encoded column.
+        """
+        X_ = X.copy()
+        X_[self.colname] = X_[self.colname] \
+            .apply(self._apply_map)
         return X_

@@ -174,50 +174,56 @@ class TrainEvaluate:
         y_proba = self.predict_proba(X_test)
         y_pred = self.predict(X_test)
 
-        tp, fp, tn, fn = confusion_matrix(y_true, y_pred).ravel()
+        tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
         self.business_metrics = {
-            "Profit (Total)": self._profit(y_true, y_pred),
-            "Profit (per Customer)": self._profit(y_true, y_pred) / len(y_true),
-            "False Negative Loss (Total)": 90 * fn,
-            "False Negative Loss (per Customer)": 90 * fn / len(y_true),
-            "False Positive Loss (Total)": 10 * fp,
-            "False Positive Loss (per Customer)": 10 * fp / len(y_true),
+            "Profit (Total)": tp * 90 - fp * 10,
+            "Profit (per Customer)": (tp * 90 - fp * 10) / len(y_true),
+            "True Positive Profit (Total)": tp * 90,
+            "True Positive Profit (per Customer)": tp * 90 / len(y_true),
+            "False Positive Loss (Total)": fp * 10,
+            "False Positive Loss (per Customer)": fp * 10 / len(y_true),
+            "False Negative Potential Profit Loss (Total)": fn * 90,
+            "False Negative Potential Profit Loss (per Customer)": fn * 90 / len(y_true),
+            "True Negative Loss Prevention (Total)": tn * 10,
+            "True Negative Loss Prevention (per Customer)": tn * 10 / len(y_true)
         }
 
         self.classification_metrics = {
-            "Accuracy": accuracy_score(y_true, y_pred),
+            "Classification Threshold": self.threshold,
+            "ROC AUC": roc_auc_score(y_true, y_proba),
             "Precision": precision_score(y_true, y_pred),
             "Recall": recall_score(y_true, y_pred),
             "F1": f1_score(y_true, y_pred),
-            "ROC AUC": roc_auc_score(y_true, y_proba),
-            "Classification Threshold": self.threshold
+            "Accuracy": accuracy_score(y_true, y_pred)
         }
 
         return self
 
-    def _predict_profit(self, X: pd.DataFrame, y: pd.Series) -> float:
+    def _predict_profit(self, model, X: pd.DataFrame, y: pd.Series) -> float:
         """
         X: Pandas DataFrame with the data.
         y: Pandas Series with the target.
         Predicts the profit metric using the best model and custom threshold.
         """
-        y_pred = self.predict(X)
+        y_pred = model.predict(X)
         return self._profit(y, y_pred)
-    
+
     def get_feature_importances(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         df: Pandas DataFrame with the data.
         Implements permutation feature importances on the data using the best model and custom threshold.
         """
+    
         X = df.drop(self.target, axis=1)
+        X = self.best_model_.steps[0][1].transform(X)
         y = df[self.target]
         result = permutation_importance(
-            self,
+            self.best_model_.steps[1][1],
             X,
             y,
             scoring=self._predict_profit,
-            n_repeats=5,
+            n_repeats=30,
             random_state=42,
             n_jobs=self.njobs
         )

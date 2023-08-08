@@ -12,9 +12,11 @@ import pandas as pd
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import \
     train_test_split, \
-    GridSearchCV
+    GridSearchCV, \
+    StratifiedKFold
 
 # --- sklearn metrics --- #
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import \
     roc_auc_score, \
     confusion_matrix, \
@@ -25,7 +27,6 @@ from sklearn.metrics import \
 
 # --- Object serialization --- #
 import pickle
-    
 
 class TrainEvaluate:
     """
@@ -70,11 +71,13 @@ class TrainEvaluate:
         X_train: Pandas DataFrame with the training data.
         y_train: Pandas Series with the training target.
         """
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         grid_search = GridSearchCV(
             estimator=self.model,
             param_grid=self.param_grid,
             scoring="roc_auc",
-            n_jobs=self.njobs
+            n_jobs=self.njobs,
+            cv=skf
         )
         grid_search = grid_search.fit(X_train, y_train)
         return grid_search
@@ -145,19 +148,21 @@ class TrainEvaluate:
 
         return self
     
-    def _predict_proba(self, df: pd.DataFrame) -> np.ndarray:
+    def predict_proba(self, df: pd.DataFrame) -> np.ndarray:
         """
         df: Pandas DataFrame with the data.
         Predicts the target variable using the best model.
         """
         return self.best_model_.predict_proba(df)[:, 1]
     
-    def _predict(self, y_proba: np.ndarray) -> np.ndarray:
+    def predict(self, df: pd.DataFrame) -> np.ndarray:
         """
         df: Pandas DataFrame with the data.
         Predicts the target variable using the best model and the threshold.
         """
-        return y_proba >= self.threshold
+        y_proba = self.predict_proba(df)
+        y_pred = (y_proba >= self.threshold).astype(int)
+        return y_pred
     
     def evaluate(self, df: pd.DataFrame) -> dict:
         """
@@ -166,8 +171,8 @@ class TrainEvaluate:
         """
         X_test = df.drop(self.target, axis=1)
         y_true = df[self.target]
-        y_proba = self._predict_proba(X_test)
-        y_pred = self._predict(y_proba)
+        y_proba = self.predict_proba(X_test)
+        y_pred = self.predict(X_test)
 
         tp, fp, tn, fn = confusion_matrix(y_true, y_pred).ravel()
 
@@ -190,10 +195,64 @@ class TrainEvaluate:
         }
 
         return self
+
+    def _predict_profit(self, X: pd.DataFrame, y: pd.Series) -> float:
+        """
+        X: Pandas DataFrame with the data.
+        y: Pandas Series with the target.
+        Predicts the profit metric using the best model and custom threshold.
+        """
+        y_pred = self.predict(X)
+        return self._profit(y, y_pred)
+    
+    def get_feature_importances(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        df: Pandas DataFrame with the data.
+        Implements permutation feature importances on the data using the best model and custom threshold.
+        """
+        X = df.drop(self.target, axis=1)
+        y = df[self.target]
+        result = permutation_importance(
+            self,
+            X,
+            y,
+            scoring=self._predict_profit,
+            n_repeats=5,
+            random_state=42,
+            n_jobs=self.njobs
+        )
+        feature_importances = pd.DataFrame({
+            "Feature": X.columns,
+            "Importance": result.importances_mean
+        })
+        self.feature_importances = feature_importances.sort_values("Importance", ascending=False)
+        return self.feature_importances
+    
+    def _apply_rank(self, x: float) -> int:
+        """
+        x: Probability of insatisfaction.
+        Applies the rank (1 to 5) to the probability of insatisfaction.
+        """
+        thresholds = [c * self.threshold / 4 for c in range(5)][::-1]
+        for rank, threshold in enumerate(thresholds):
+            if rank >= threshold:
+                return rank + 1
+        return 5
+    
+    def rank_customers(self, df: pd.DataFrame) -> pd.Series:
+        """
+        df: Pandas DataFrame with the data.
+        Ranks the customers by their probability of insatisfaction.
+        """
+        df_ = df.copy()
+        X = df_.drop(self.target, axis=1)
+        y = df_[self.target]
+        df_["rank"] = self.predict_proba(X)
+        return df_["rank"].apply(self._apply_rank)
     
 def build_model(train: bool = False, path: str = None,
-                train_df: pd.DataFrame = None, test_df: pd.DataFrame = None,
-                model: Pipeline = None, param_grid: dict = None, target: str = None,
+                train_df: pd.DataFrame = None, model: Pipeline = None,
+                param_grid: dict = None, target: str = None,
                 njobs: int = 8, verbose: bool = True) -> TrainEvaluate:
     """
     train: Wheter to train the model or not.
@@ -210,7 +269,6 @@ def build_model(train: bool = False, path: str = None,
     if train:
         train_evaluate = TrainEvaluate(model, param_grid, target, njobs, verbose)
         train_evaluate = train_evaluate.fit(train_df)
-        train_evaluate = train_evaluate.evaluate(test_df)
         with open(path, "wb") as f:
             pickle.dump(train_evaluate, f)
     else:

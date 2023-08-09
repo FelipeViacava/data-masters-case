@@ -30,11 +30,11 @@ hgbc_grid = {
 
 hgbc_model = build_model(
     train = True,
-    path = "models/hgbc.pkl",
+    path = "models/hgb.pkl",
     train_df = train,
     model = hgbc,
     param_grid = hgbc_grid,
     target = "TARGET",
-    njobs = 6,
+    njobs = 8,
     verbose = True
 )

@@ -4,10 +4,11 @@ from resources.train_evaluate import build_model
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import HistGradientBoostingClassifier as HGBC
 
-train = pd.read_csv("data/train.csv")
-test = pd.read_csv("data/test.csv")
+print("Training HistGradientBoostingClassifier...")
 
-hgbc = Pipeline(
+df = pd.read_csv("data/train.csv")
+
+hgb = Pipeline(
     steps=[
         ("preprocessor", build_prep()),
         (
@@ -15,26 +16,26 @@ hgbc = Pipeline(
             HGBC(
                 random_state=42,
                 class_weight="balanced",
-                max_leaf_nodes=None,
                 categorical_features=["var36", "var21"]
             )
         )
     ]
 )
 
-hgbc_grid = {
-    "classifier__learning_rate": [.001, .01, .1, 1],
-    "classifier__max_iter": [50, 75, 100, 150],
-    "classifier__max_depth": [2, 4, 6, 8, 10]
+hgb_grid = {
+    "classifier__learning_rate": [.001, .003, .01, .03, .1, .3, 1],
+    "classifier__max_iter": [50, 75, 100, 125, 150],
+    "classifier__max_depth": [2, 3, 4, 5, 6, 8]
 }
 
 hgbc_model = build_model(
-    train = True,
     path = "models/hgb.pkl",
-    train_df = train,
-    model = hgbc,
-    param_grid = hgbc_grid,
+    train_df = df,
+    model = hgb,
+    param_grid = hgb_grid,
     target = "TARGET",
     njobs = 8,
     verbose = True
 )
+
+print("Done training HistGradientBoostingClassifier. Model saved to models/hgb.pkl")

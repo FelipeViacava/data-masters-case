@@ -256,15 +256,12 @@ class TrainEvaluate:
         df_["rank"] = self.predict_proba(X)
         return df_["rank"].apply(self._apply_rank)
     
-def build_model(train: bool = False, path: str = None,
-                train_df: pd.DataFrame = None, model: Pipeline = None,
+def build_model(path: str = None, train_df: pd.DataFrame = None, model: Pipeline = None,
                 param_grid: dict = None, target: str = None,
                 njobs: int = 8, verbose: bool = True) -> TrainEvaluate:
     """
-    train: Wheter to train the model or not.
     path: Path to a fitted model.
     train_df: Pandas DataFrame with the training data.
-    test_df: Pandas DataFrame with the test data.
     model: sklearn Pipeline with the model.
     param_grid: Dictionary of parameters to search over.
     target: Name of the column to predict.
@@ -272,12 +269,9 @@ def build_model(train: bool = False, path: str = None,
     verbose: Wheter to print the progress or not.
     Builds a TrainEvaluate object.
     """
-    if train:
-        train_evaluate = TrainEvaluate(model, param_grid, target, njobs, verbose)
-        train_evaluate = train_evaluate.fit(train_df)
-        with open(path, "wb") as f:
-            pickle.dump(train_evaluate, f)
-    else:
-        with open(path, "rb") as f:
-            train_evaluate = pickle.load(f)
+
+    train_evaluate = TrainEvaluate(model, param_grid, target, njobs, verbose)
+    train_evaluate = train_evaluate.fit(train_df)
+    with open(path, "wb") as f:
+        pickle.dump(train_evaluate, f)
     return train_evaluate

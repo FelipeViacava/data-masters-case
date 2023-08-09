@@ -4,8 +4,9 @@ from resources.train_evaluate import build_model
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 
+print("Training RandomForestClassifier")
+
 train = pd.read_csv("data/train.csv")
-test = pd.read_csv("data/test.csv")
 
 rf = Pipeline(
     steps=[
@@ -15,7 +16,7 @@ rf = Pipeline(
             RandomForestClassifier(
                 random_state=42,
                 n_estimators=500,
-                class_weight="balanced_subsample"
+                class_weight="balanced"
             )
         )
     ]
@@ -27,12 +28,13 @@ rf_grid = {
 }
 
 rf_model = build_model(
-    train = True,
     path = "models/rf.pkl",
     train_df = train,
     model = rf,
     param_grid = rf_grid,
     target = "TARGET",
-    njobs = 6,
+    njobs = 8,
     verbose = True
 )
+
+print("RandomForestClassifier trained. Model saved to models/rf.pkl")

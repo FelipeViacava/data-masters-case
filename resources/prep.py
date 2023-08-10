@@ -11,8 +11,6 @@ from resources.customtransformers import \
 
 # --- Pipeline Building --- #
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer
-from sklearn.compose import ColumnTransformer
 
 def build_prep() -> Pipeline:
     """

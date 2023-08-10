@@ -234,17 +234,6 @@ class TrainEvaluate:
         self.feature_importances = feature_importances.sort_values("Importance", ascending=False)
         return self.feature_importances
     
-    def _apply_rank(self, x: float) -> int:
-        """
-        x: Probability of insatisfaction.
-        Applies the rank (1 to 5) to the probability of insatisfaction.
-        """
-        thresholds = [c * self.threshold / 4 for c in range(5)][::-1]
-        for rank, threshold in enumerate(thresholds):
-            if rank >= threshold:
-                return rank + 1
-        return 5
-    
     def rank_customers(self, df: pd.DataFrame) -> pd.Series:
         """
         df: Pandas DataFrame with the data.
@@ -253,8 +242,20 @@ class TrainEvaluate:
         df_ = df.copy()
         X = df_.drop(self.target, axis=1)
         y = df_[self.target]
+
+        def apply_rank(x: float) -> int:
+            """
+            x: Probability of insatisfaction.
+            Applies the rank (1 to 5) to the probability of insatisfaction.
+            """
+            thresholds = [c * self.threshold / 4 for c in range(5)][::-1]
+            for rank, threshold in enumerate(thresholds):
+                if x >= threshold:
+                    return rank + 1
+            return 5
+
         df_["rank"] = self.predict_proba(X)
-        return df_["rank"].apply(self._apply_rank)
+        return df_["rank"].apply(apply_rank)
     
 def build_model(path: str = None, train_df: pd.DataFrame = None, model: Pipeline = None,
                 param_grid: dict = None, target: str = None,

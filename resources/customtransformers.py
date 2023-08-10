@@ -30,7 +30,7 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
             for col in X.columns
             if (
                 (X[col].nunique() == 1)
-                & (col in self.also)
+                | (col in self.also)
             )
         ]
         if self.print_cols:

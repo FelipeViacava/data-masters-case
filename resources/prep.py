@@ -1,5 +1,7 @@
 # --- Transformers --- #
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.compose import ColumnTransformer
 from resources.customtransformers import \
     DropConstantColumns, \
     DropDuplicateColumns, \
@@ -93,6 +95,20 @@ def build_prep_nan() -> Pipeline:
     prep_nan = Pipeline(
         steps=[
             ("prep", build_prep()),
+            (
+                "create_nan_flag",
+                ColumnTransformer(
+                    transformers=[
+                        (
+                            "create_nan_flag",
+                            FunctionTransformer(
+                                lambda x: x.isna().astype(int),
+                            ),
+                            ["var3"]
+                        )
+                    ]
+                )   
+            ),
             ("nan", SimpleImputer(strategy="median"))
         ]
     )

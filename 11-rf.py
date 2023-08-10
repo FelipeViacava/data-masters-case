@@ -24,7 +24,7 @@ rf = Pipeline(
 
 rf_grid = {
     "classifier__max_depth": [4, 8, 16, 32],
-    "classifier__max_features": [8, 16, 32, 64]
+    "classifier__max_features": [8, 16, 32, 64, 96, 128],
 }
 
 rf_model = build_model(

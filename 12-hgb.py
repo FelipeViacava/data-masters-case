@@ -2,7 +2,7 @@ import pandas as pd
 from resources.prep import build_prep
 from resources.train_evaluate import build_model
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import HistGradientBoostingClassifier as HGBC
+from sklearn.ensemble import HistGradientBoostingClassifier as HGB
 
 print("Training HistGradientBoostingClassifier...")
 
@@ -13,7 +13,7 @@ hgb = Pipeline(
         ("preprocessor", build_prep()),
         (
             "classifier",
-            HGBC(
+            HGB(
                 random_state=42,
                 class_weight="balanced",
                 categorical_features=["var36", "var21"]
@@ -24,8 +24,9 @@ hgb = Pipeline(
 
 hgb_grid = {
     "classifier__learning_rate": [.001, .003, .01, .03, .1, .3, 1],
-    "classifier__max_iter": [50, 75, 100, 125, 150],
-    "classifier__max_depth": [2, 3, 4, 5, 6, 8]
+    "classifier__max_iter": [50, 75, 100, 125, 150, 200, 500, 1000],
+    "classifier__max_depth": [2, 3, 4, 5, 6, 8],
+    "classifier__l2_regularization": [0, .1, .3, 1, 3]
 }
 
 hgbc_model = build_model(

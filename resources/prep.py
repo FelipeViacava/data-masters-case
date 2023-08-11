@@ -12,6 +12,9 @@ from resources.customtransformers import \
 # --- Pipeline Building --- #
 from sklearn.pipeline import Pipeline
 
+# --- Docs --- #
+from typing import List
+
 def build_prep() -> Pipeline:
     """
     Builds base pipeline.

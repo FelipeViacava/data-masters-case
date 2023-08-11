@@ -320,3 +320,32 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
         X_[self.colname] = X_[self.colname] \
             .apply(self._apply_map)
         return X_
+    
+class PrefixScaler(BaseEstimator, TransformerMixin):
+    def __init__(self, prefixes, scaler, zero_heavy = False, ignore=[]):
+        self.prefixes = prefixes
+        self.scaler = scaler
+        self.ignore = ignore
+        self.zero_heavy = zero_heavy
+        pass
+
+    def fit(self, X, y=None):
+        self.prefix_cols = [
+            col
+            for col in X.columns
+            if (
+                any([col.startswith(prefix) for prefix in self.prefixes])
+                & (col not in self.ignore)
+            )
+        ]
+        if self.zero_heavy:
+            X_ = X.copy().replace(0, np.nan)
+        else:
+            X_ = X.copy()
+        self.scaler = self.scaler.fit(X_[self.prefix_cols])
+        return self
+
+    def transform(self, X):
+        X_ = X.copy()
+        X_[self.prefix_cols] = self.scaler.transform(X[self.prefix_cols])
+        return X_

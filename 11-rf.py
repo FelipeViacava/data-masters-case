@@ -4,7 +4,7 @@ from resources.train_evaluate import build_model
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
 
-print("Training RandomForestClassifier")
+print("Training RandomForestClassifier...")
 
 train = pd.read_csv("data/train.csv")
 

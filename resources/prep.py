@@ -1,5 +1,10 @@
 # --- Transformers --- #
-from sklearn.impute import SimpleImputer
+from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import \
+    StandardScaler, \
+    RobustScaler, \
+    OneHotEncoder
 from resources.customtransformers import \
     DropConstantColumns, \
     DropDuplicateColumns, \
@@ -7,13 +12,12 @@ from resources.customtransformers import \
     CustomSum, \
     CustomImputer, \
     AddNoneCount, \
-    CustomEncoder
+    CustomEncoder, \
+    PrefixScaler
 
 # --- Pipeline Building --- #
 from sklearn.pipeline import Pipeline
-
-# --- Docs --- #
-from typing import List
+from sklearn.compose import ColumnTransformer
 
 def build_prep() -> Pipeline:
     """
@@ -101,3 +105,54 @@ def build_prep_nan() -> Pipeline:
         ]
     )
     return prep_nan
+
+def build_prep_cluster(n_comp=None):
+    cat_cols = ["var36", "var21"]
+
+    rbs_prefixes = [
+        "saldo",
+        "imp",
+        "delta",
+        "non_zero_count_ind",
+        "num"
+    ]
+
+    ss_prefixes = rbs_prefixes + [
+        "sum_of_saldo",
+        "non_zero_count_imp",
+        "none_count_delta",
+        "non_zero_count_delta",
+        "sum_of_delta",
+        "ind",
+        "non_zero_count_num",
+        "sum_of_num",
+        "var3",
+        "var15",
+        "var38"
+    ]
+
+    zh_ss_prefixes = [
+        "non_zero_count_saldo",
+        "sum_of_imp"
+    ]
+
+    cat_tf = Pipeline(
+        steps=[
+            ("ohe", OneHotEncoder(min_frequency=100, sparse_output=False)),
+            ("ss", StandardScaler())
+        ]
+    )
+
+    prep = Pipeline(
+        steps=[
+            ("base", build_prep()[:-2]),
+            ("rbs", PrefixScaler(rbs_prefixes, RobustScaler())),
+            ("ss", PrefixScaler(ss_prefixes, StandardScaler())),
+            ("zh_ss", PrefixScaler(zh_ss_prefixes, StandardScaler(), zero_heavy=True)),
+            ("cat",ColumnTransformer([("ohe", cat_tf, cat_cols)], remainder='passthrough')),
+            ("knn", KNNImputer(n_neighbors=5)),
+            ("pca", PCA(n_components=n_comp))
+        ]
+    )
+
+    return prep

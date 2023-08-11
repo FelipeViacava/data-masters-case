@@ -347,5 +347,5 @@ class PrefixScaler(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X_ = X.copy()
-        X_[self.prefix_cols] = self.scaler.transform(X[self.prefix_cols])
+        X_[self.prefix_cols] = self.scaler.transform(X_[self.prefix_cols])
         return X_

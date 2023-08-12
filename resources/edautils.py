@@ -49,3 +49,13 @@ def neg_pos_zero(df: pd.DataFrame, cols: list) -> pd.DataFrame:
             how="outer"
         ) \
         .sort_values("Negative values (%)")
+
+def npz_median(df: pd.DataFrame, cols: list) -> pd.DataFrame:
+    npz = neg_pos_zero(df, cols) \
+        .set_index("Column") \
+        .median() \
+        .reset_index() \
+        .set_index("index") \
+        .rename(mapper={0: "Mediana"}, axis=1)
+    npz.index.name = "Medida"
+    return npz

@@ -3,3 +3,5 @@ junk
 data
 models
 resources/__pycache__
+*files*
+main_files

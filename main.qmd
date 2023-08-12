@@ -1,16 +1,17 @@
 ---
-title: "Data Masters"
+title: "Data Masters: Cientista de Dados"
 author: Felipe Viacava
 format:
-    revealjs:
-        slide-number: true
-        theme: blood
-        transition: slide
+    html:
+        theme: journal
+    pdf:
+        code-fold: false
+notebook-links: true
 jupyter: python3
 ---
-# Introdução {.smaller}
+# Introdução
 
-## Nesta apresentação {.smaller}
+## Nesta apresentação
 
 1. Análise exploratória
 
@@ -20,7 +21,7 @@ jupyter: python3
 
 4. Análise de agrupamentos
 
-## *Scripts* de auxílio {.smaller .scrollable}
+## Scripts de auxílio
 
 Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-masters-case)
 
@@ -29,129 +30,88 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 - ***Pipelines* de processamento de dados:** resources/prep.py
 - **Treinamento da *Random Forest*:** 11-rf.py
 - **Treinamento do *HGB*:** 12-hgb.py
-- **Vizualização dos dados:** resources/customviz.py
+- **Vizualização de dados:** resources/customviz.py
 - **Separação entre treino e teste:** resources/split.py
 - **Funções de auxílio da *EDA*:** resources/edautils.py
 
-## Premissas {.smaller}
+## Premissas
 
 - Os dados fornecidos são suficientes para a solução do problema
 - Objetivo da classificação: maximizar lucro
 - Objetivo do rankeamento: maximizar lucro atuando sobre o *rank* 1
 - Objetivo do agrupamento: identificar e avaliar *clusters* com base no resultado da classificação
 
-# *EDA* {.smaller}
+# EDA
 
-## Análise exploratória {.smaller}
+01-eda.ipynb
 
-- Separação entre treino e teste antes da EDA
+## Análise exploratória
+
+- Separação entre treino e teste antes da EDA (*resources/split.py*)
 - Nenhuma alteração definitiva nos dados
 - Auxílio na tomada de decisão para os passos seguintes
 - Inspiração para criar transformadores customizados
 
-```{python}
-# --- Data Exploration --- #
-import pandas as pd
-import missingno as mno
-import matplotlib.pyplot as plt
-import resources.customviz as cv
-from resources.edautils import neg_pos_zero
-
-# --- Data Processing --- #
-import numpy as np
-from sklearn.model_selection import train_test_split
-from resources.customtransformers import \
-    DropConstantColumns, \
-    DropDuplicateColumns, \
-    AddNonZeroCount, \
-    CustomSum, \
-    CustomImputer, \
-    AddNoneCount, \
-    CustomEncoder
-
-# --- Setting Global Options --- #
-pd.options.display.max_columns = None
-pd.options.display.max_rows = None
-
-df = pd.read_csv("data/train.csv")
-```
-
-## Análise inicial {.smaller}
+## Análise inicial
 
 - Colunas constantes
 - Colunas duplicadas
-- Sem *missing values*
 
-```{python}
-#| echo: true
-dcc = DropConstantColumns(print_cols=True)
-dcc = dcc.fit(df)
-df = dcc.transform(df)
+{{< embed 01-eda.ipynb#dupeconstdrop >}}
 
-ddc = DropDuplicateColumns(print_cols=True)
-ddc = ddc.fit(df)
-df = ddc.transform(df)
+- Sem valores faltantes
 
-print("missing:", df.isna().sum().sum())
-```
+{{< embed 01-eda.ipynb#missing-total >}}
 
-## Transformadores customizados {.smaller}
+## Transformadores customizados
 
 - Implementação em *pipelines* de processamento
 - Uso simples e fácil manutenção
-- Reutilização em outros projetos
+- Reutilização em outros projetos 
 
-```{python}
-#| echo: true
-#| eval: False
-class DropConstantColumns(BaseEstimator, TransformerMixin):
-    """
-    This class is made to work as a step in sklearn.pipeline.Pipeline object.
-    It drops constant columns from a pandas dataframe object.
-    Important: the constant columns are found in the fit function and dropped in the transform function.
-    """
-    def __init__(self, print_cols: bool = False, also: list[str] = []) -> None:
-        """
-        print_cols: default = False. Determine whether the fit function should print the constant columns' names.
-        ignore: list of columns to ignore.
-        Initiates the class.
-        """
-        self.print_cols = print_cols
-        self.also = also
-        pass
+{{< embed 00-support.ipynb#classdrop >}}
 
-    def fit(self, X: pd.DataFrame , y: None = None) -> None:
-        """
-        X: dataset whose constant columns should be removed.
-        y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
-        Creates class atributte with the names of the columns to be removed in the transform function.
-        """
-        self.constant_cols = [
-            col
-            for col in X.columns
-            if (
-                (X[col].nunique() == 1)
-                | (col in self.also)
-            )
-        ]
-        if self.print_cols:
-            print(f"{len(self.constant_cols)} constant columns were found.")
-        return self
-    
-    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
-        """
-        X: dataset whose constant columns should be removed.
-        Returns dataset without the constant columns found in the fit function.
-        """
-        return X.copy().drop(self.constant_cols, axis=1)
-```
+*resources/customtransformers.py*
 
-## ID e TARGET {.smaller}
+## ID e TARGET
 
-```{python}
-#| echo: true
-nu = df["ID"].nunique() / df.shape[0]
-print(f"Valores únicos: {100*nu:.2f}%")
-df["TARGET"].value_counts(normalize=True).reset_index().set_index("TARGET")
-```
+{{< embed 01-eda.ipynb#id-target >}}
 
+## Análise por prefixo: saldo
+
+- Variáveis numéricas (valores _float_ e contexto)
+- Dados esparsos, com 99% de zeros por coluna (mediana)
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+## Análise por prefixo: saldo
+
+{{< embed 01-eda.ipynb#saldo-describe >}}
+
+## Saldo: contagem de não-zeros
+
+{{< embed 01-eda.ipynb#saldo-nonzero >}}
+
+## Saldo: soma total
+
+{{< embed 01-eda.ipynb#saldo-sum >}}
+
+## Análise por prefixo: imp
+
+- Variáveis numéricas (valores _float_ e contexto)
+- Dados esparsos, com 99% de zeros por coluna (mediana)
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+## Análise por prefixo: imp
+{{< embed 01-eda.ipynb#imp-describe >}}
+
+## Imp: contagem de não-zeros
+
+{{< embed 01-eda.ipynb#imp-nonzero >}}
+
+## Imp: soma total
+
+{{< embed 01-eda.ipynb#imp-sum >}}

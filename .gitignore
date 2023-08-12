@@ -2,4 +2,4 @@ dmc-venv
 junk
 data
 models
-*__pycache__
+resources/__pycache__

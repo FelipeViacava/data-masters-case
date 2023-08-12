@@ -117,13 +117,13 @@ def build_prep_cluster(n_comp=None):
         "num"
     ]
 
-    ss_prefixes = rbs_prefixes + [
+    ss_prefixes = [
         "sum_of_saldo",
         "non_zero_count_imp",
         "none_count_delta",
         "non_zero_count_delta",
         "sum_of_delta",
-        "ind",
+        #"ind",
         "non_zero_count_num",
         "sum_of_num",
         "var3",

@@ -34,7 +34,7 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
             )
         ]
         if self.print_cols:
-            print(f"{len(self.constant_cols)} constant columns were found")
+            print(f"{len(self.constant_cols)} constant columns were found.")
         return self
     
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:

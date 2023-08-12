@@ -1,0 +1,17 @@
+---
+title: "Data Masters: Cientista de Dados"
+format:
+    pdf:
+        code-fold: true
+jupyter
+
+Felipe Viacava -- São Paulo, agosto de 2023
+
+## Introdução
+O presente
+
+
+```{python}
+print("salve mundo")
+
+```

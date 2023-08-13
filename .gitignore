@@ -1,7 +1,6 @@
+data
 dmc-venv
 junk
-data
 models
-resources/__pycache__
+*.html
 *files*
-main_files

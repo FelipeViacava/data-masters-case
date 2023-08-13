@@ -111,29 +111,25 @@ def build_prep_cluster(n_comp=None):
 
     rbs_prefixes = [
         "saldo",
+        "non_zero_count_saldo",
+        "sum_of_saldo",
         "imp",
+        "non_zero_count_imp",
+        "sum_of_imp",
         "delta",
+        "none_count_delta",
+        "sum_of_delta",
+        "non_zero_count_delta",
         "non_zero_count_ind",
         "num"
-    ]
-
-    ss_prefixes = [
-        "sum_of_saldo",
-        "non_zero_count_imp",
-        "none_count_delta",
-        "non_zero_count_delta",
-        "sum_of_delta",
-        #"ind",
         "non_zero_count_num",
         "sum_of_num",
         "var3",
         "var15",
-        "var38"
     ]
 
-    zh_ss_prefixes = [
-        "non_zero_count_saldo",
-        "sum_of_imp"
+    ss_prefixes = [
+        "var38"
     ]
 
     cat_tf = Pipeline(
@@ -148,7 +144,6 @@ def build_prep_cluster(n_comp=None):
             ("base", build_prep()[:-2]),
             ("rbs", PrefixScaler(rbs_prefixes, RobustScaler())),
             ("ss", PrefixScaler(ss_prefixes, StandardScaler())),
-            ("zh_ss", PrefixScaler(zh_ss_prefixes, StandardScaler(), zero_heavy=True)),
             ("cat",ColumnTransformer([("ohe", cat_tf, cat_cols)], remainder='passthrough')),
             ("knn", KNNImputer(n_neighbors=5)),
             ("pca", PCA(n_components=n_comp))

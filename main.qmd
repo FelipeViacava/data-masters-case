@@ -4,8 +4,6 @@ author: Felipe Viacava
 format:
     html:
         theme: journal
-    pdf:
-        code-fold: false
 notebook-links: true
 jupyter: python3
 ---
@@ -25,7 +23,10 @@ jupyter: python3
 
 Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-masters-case)
 
-- **Treinamento automatizado de *pipelines*:** resources/train_evaluate.py
+- **Análise exploratória completa:** 01-eda.ipynb
+- **Modelos de classificação e rankeamento:** 02-class.ipynb
+- **Análise de agrupamentos:** 03-cluster.ipynb
+- ***Wrapper* de *pipelines* do *sklearn*:** resources/train_evaluate.py
 - **Transformadores customizados:** resources/customtransformers.py
 - ***Pipelines* de processamento de dados:** resources/prep.py
 - **Treinamento da *Random Forest*:** 11-rf.py
@@ -41,29 +42,22 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 - Objetivo do rankeamento: maximizar lucro atuando sobre o *rank* 1
 - Objetivo do agrupamento: identificar e avaliar *clusters* com base no resultado da classificação
 
-# EDA
-
-01-eda.ipynb
-
-## Análise exploratória
+# Análise exploratória
 
 - Separação entre treino e teste antes da EDA (*resources/split.py*)
 - Nenhuma alteração definitiva nos dados
 - Auxílio na tomada de decisão para os passos seguintes
 - Inspiração para criar transformadores customizados
 
-## Análise inicial
+### Análise inicial
 
 - Colunas constantes
 - Colunas duplicadas
+- Sem valores faltantes 
 
 {{< embed 01-eda.ipynb#dupeconstdrop >}}
 
-- Sem valores faltantes
-
-{{< embed 01-eda.ipynb#missing-total >}}
-
-## Transformadores customizados
+### Transformadores customizados
 
 - Implementação em *pipelines* de processamento
 - Uso simples e fácil manutenção
@@ -71,47 +65,193 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 00-support.ipynb#classdrop >}}
 
-*resources/customtransformers.py*
-
-## ID e TARGET
+### ID e TARGET
 
 {{< embed 01-eda.ipynb#id-target >}}
 
-## Análise por prefixo: saldo
+### Saldo
 
-- Variáveis numéricas (valores _float_ e contexto)
-- Dados esparsos, com 99% de zeros por coluna (mediana)
+- Variáveis numéricas
+    - Muitos valores únicos
+    - Valores negativos
+    - Contexto de mercado Financeiro
+- Dados esparsos, praticamente apenas 0s
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
     2. Soma das colunas por cliente
-
-## Análise por prefixo: saldo
 
 {{< embed 01-eda.ipynb#saldo-describe >}}
 
-## Saldo: contagem de não-zeros
+#### Saldo: contagem de não-zeros 
+
+- Clientes sem nenhum saldo parecem mais insatisfeitos
 
 {{< embed 01-eda.ipynb#saldo-nonzero >}}
 
-## Saldo: soma total
+#### Saldo: soma total
+
+- Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#saldo-sum >}}
 
-## Análise por prefixo: imp
+### Imp
 
-- Variáveis numéricas (valores _float_ e contexto)
-- Dados esparsos, com 99% de zeros por coluna (mediana)
+- Variáveis numéricas
+    - Muitos valores únicos
+    - Contexto de mercado financeiro
+- Dados esparsos, praticamente apenas 0s
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
     2. Soma das colunas por cliente
 
-## Análise por prefixo: imp
-{{< embed 01-eda.ipynb#imp-describe >}}
+{{< embed 01-eda.ipynb#imp-describe >}} 
 
-## Imp: contagem de não-zeros
+#### Imp: contagem de não-zeros
+
+- Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#imp-nonzero >}}
 
-## Imp: soma total
+#### Imp: soma total
+
+- Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#imp-sum >}}
+
+### Delta
+
+- Valores faltantes
+    - Preenchidos com 9999999999
+    - Classe criada para substituir com *np.nan*
+    - Abordagem diferente para cada algorítmo
+- Variáveis numéricas
+    - Valores negativos e _floats_
+    - Por *delta* e sufixos como *1y3* entende-se que é uma variação
+- Dados ainda mais esparsos que *saldo* e *imp*
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+{{< embed 01-eda.ipynb#delta-describe >}}
+
+#### Delta: valores faltantes
+
+Correlação na ocorrência mostra relação entre variáveis com nomes semelhantes (oportunidade de melhorias no projeto)
+    
+{{< embed 01-eda.ipynb#delta-missing >}}
+
+#### Delta: contagem de valores faltantes
+
+- Pouco poder de discriminação
+
+{{< embed 01-eda.ipynb#delta-missingcount >}}
+
+#### Delta: contagem de não-zeros
+
+- Pouco poder de discriminação
+
+{{< embed 01-eda.ipynb#delta-nonzero >}}
+
+#### Delta: soma total
+
+- Pouco poder de discriminação
+
+{{< embed 01-eda.ipynb#delta-sum >}}
+
+### Ind
+
+- Variáveis binárias
+- Variável criada:
+    - Contagem de valores diferentes de 0 por cliente	
+
+{{< embed 01-eda.ipynb#ind-describe >}}
+
+#### Ind: contagem de valores diferentes de 0
+
+- Distribuições próximas, mas com centros ligeiramente diferentes
+
+{{< embed 01-eda.ipynb#ind-nonzero >}}
+
+### Num
+
+- Variáveis numéricas (discretas)
+    - Apenas valores inteiros e positivos
+    - Prefixo sugere que são contagens e não categorias
+- Normalização com *RobustScaler*
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+{{< embed 01-eda.ipynb#num-describe >}}
+
+#### Num: contagem de não-zeros
+
+- Distribuições diferentes
+
+{{< embed 01-eda.ipynb#num-nonzero >}}
+
+#### Num: soma total
+
+- Distribuições próximas, mas com centros ligeiramente diferentes
+
+{{< embed 01-eda.ipynb#num-sum >}}
+
+### Variáveis categóricas
+
+- *var36* e *var21*
+- Transformações:
+    - *Target Encoder* customizado para modelos de árvore
+        - Ordenação por média da variável alvo
+        - Classes desconhecidas entram na categoria mais frequente 
+    - *One Hot Encoding*
+        - Classes pouco frequentes agrupadas em "outros"
+        - Classes desconhecidas entram na categoria mais frequente
+
+#### var36
+
+- Proporções diferentes entre classes (inclusive frequentes)
+- Pode agregar poder de discriminação
+
+{{< embed 01-eda.ipynb#var36 >}}
+
+#### var21
+
+- Proporções diferentes entre classes (inclusive frequentes)
+- Pode agregar poder de discriminação
+- Classes pouco frequentes: abordagem diferente para cada algorítmo
+
+{{< embed 01-eda.ipynb#var21 >}}
+
+### Demais variáveis
+
+- *var3*, *var15*, *var38*
+
+#### var3
+
+- Valores faltantes:
+    - Preenchidos com -999999
+    - Abordagem diferente para cada algorítmo
+
+{{< embed 01-eda.ipynb#var3-missing >}}
+
+- Variável numérica (discreta)
+    - Muitos valores únicos
+    - Apenas valores inteiros e positivos
+
+{{< embed 01-eda.ipynb#var3 >}}
+
+#### var15
+
+- Variável numérica (discreta)
+    - Apenas valores inteiros e positivos
+    - Muitos valores únicos
+    
+{{< embed 01-eda.ipynb#var15 >}}
+
+#### var38 
+
+- Variável numérica (contínua)
+    - Apenas valores positivos
+    - Composta apenas por decimais
+    
+{{< embed 01-eda.ipynb#var38 >}}

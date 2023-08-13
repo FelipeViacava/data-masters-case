@@ -22,7 +22,7 @@ def expl_var(evr) -> None:
 
     fig, ax1 = plt.subplots(figsize=(8, 5))
 
-    ax1.bar(range(1, len(evr)+1), evr, alpha=0.5, align='center')
+    ax1.bar(range(1, len(evr)+1), evr, alpha=0.8, align='center')
     ax1.set_ylabel('Explained Variance Ratio', color='b')
     ax1.set_xlabel('Principal Component')
     for label in ax1.get_yticklabels():
@@ -35,8 +35,11 @@ def expl_var(evr) -> None:
     for label in ax2.get_yticklabels():
         label.set_color("g")
 
-    ax1.set_ylim([0, max(evr)*1.1])
+    ax1.set_ylim([0, max(evr)*1.1]) #150
     ax2.set_ylim([0, 1])
+
+    ax1.set_xlim([0, 30])
+    ax2.set_xlim([0, 30])
 
     plt.tight_layout()
     plt.show()

@@ -1,9 +1,10 @@
 ---
 title: "Data Masters: Cientista de Dados"
 author: Felipe Viacava
+date: 2023-08-15
 format:
     html:
-        theme: journal
+        theme: litera
 notebook-links: true
 jupyter: python3
 ---
@@ -42,14 +43,14 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 - Objetivo do rankeamento: maximizar lucro atuando sobre o *rank* 1
 - Objetivo do agrupamento: identificar e avaliar *clusters* com base no resultado da classificação
 
-# Análise exploratória
+# 1 - Análise exploratória
 
 - Separação entre treino e teste antes da EDA (*resources/split.py*)
 - Nenhuma alteração definitiva nos dados
 - Auxílio na tomada de decisão para os passos seguintes
 - Inspiração para criar transformadores customizados
 
-### Análise inicial
+## Análise inicial
 
 - Colunas constantes
 - Colunas duplicadas
@@ -57,24 +58,25 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 01-eda.ipynb#dupeconstdrop >}}
 
-### Transformadores customizados
+## Transformadores customizados
 
 - Implementação em *pipelines* de processamento
 - Uso simples e fácil manutenção
 - Reutilização em outros projetos 
 
-{{< embed 00-support.ipynb#classdrop >}}
+{{< embed 00-support.ipynb#custom-transformers >}}
 
-### ID e TARGET
+## ID e TARGET
 
 {{< embed 01-eda.ipynb#id-target >}}
 
-### Saldo
+## Saldo
 
 - Variáveis numéricas
     - Muitos valores únicos
     - Valores negativos
-    - Contexto de mercado Financeiro
+    - *Floats*
+    - Prefixo
 - Dados esparsos, praticamente apenas 0s
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
@@ -82,23 +84,24 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 01-eda.ipynb#saldo-describe >}}
 
-#### Saldo: contagem de não-zeros 
+### Saldo: contagem de não-zeros 
 
-- Clientes sem nenhum saldo parecem mais insatisfeitos
+- Clientes sem nenhum tipo de saldo parecem mais insatisfeitos
 
 {{< embed 01-eda.ipynb#saldo-nonzero >}}
 
-#### Saldo: soma total
+### Saldo: soma total
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#saldo-sum >}}
 
-### Imp
+## Imp
 
 - Variáveis numéricas
-    - Muitos valores únicos
-    - Contexto de mercado financeiro
+    - Valores negativos
+    - *Floats*
+    - Prefixo
 - Dados esparsos, praticamente apenas 0s
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
@@ -106,19 +109,19 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 01-eda.ipynb#imp-describe >}} 
 
-#### Imp: contagem de não-zeros
+### Imp: contagem de não-zeros
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#imp-nonzero >}}
 
-#### Imp: soma total
+### Imp: soma total
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#imp-sum >}}
 
-### Delta
+## Delta
 
 - Valores faltantes
     - Preenchidos com 9999999999
@@ -134,31 +137,31 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 01-eda.ipynb#delta-describe >}}
 
-#### Delta: valores faltantes
+### Delta: valores faltantes
 
 Correlação na ocorrência mostra relação entre variáveis com nomes semelhantes (oportunidade de melhorias no projeto)
     
 {{< embed 01-eda.ipynb#delta-missing >}}
 
-#### Delta: contagem de valores faltantes
+### Delta: contagem de valores faltantes
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#delta-missingcount >}}
 
-#### Delta: contagem de não-zeros
+### Delta: contagem de não-zeros
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#delta-nonzero >}}
 
-#### Delta: soma total
+### Delta: soma total
 
 - Pouco poder de discriminação
 
 {{< embed 01-eda.ipynb#delta-sum >}}
 
-### Ind
+## Ind
 
 - Variáveis binárias
 - Variável criada:
@@ -166,13 +169,13 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 {{< embed 01-eda.ipynb#ind-describe >}}
 
-#### Ind: contagem de valores diferentes de 0
+### Ind: contagem de valores diferentes de 0
 
 - Distribuições próximas, mas com centros ligeiramente diferentes
 
 {{< embed 01-eda.ipynb#ind-nonzero >}}
 
-### Num
+## Num
 
 - Variáveis numéricas (discretas)
     - Apenas valores inteiros e positivos
@@ -184,19 +187,19 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 {{< embed 01-eda.ipynb#num-describe >}}
 
-#### Num: contagem de não-zeros
+### Num: contagem de não-zeros
 
 - Distribuições diferentes
 
 {{< embed 01-eda.ipynb#num-nonzero >}}
 
-#### Num: soma total
+### Num: soma total
 
 - Distribuições próximas, mas com centros ligeiramente diferentes
 
 {{< embed 01-eda.ipynb#num-sum >}}
 
-### Variáveis categóricas
+## Variáveis categóricas
 
 - *var36* e *var21*
 - Transformações:
@@ -207,14 +210,14 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
         - Classes pouco frequentes agrupadas em "outros"
         - Classes desconhecidas entram na categoria mais frequente
 
-#### var36
+### var36
 
 - Proporções diferentes entre classes (inclusive frequentes)
 - Pode agregar poder de discriminação
 
 {{< embed 01-eda.ipynb#var36 >}}
 
-#### var21
+### var21
 
 - Proporções diferentes entre classes (inclusive frequentes)
 - Pode agregar poder de discriminação
@@ -222,11 +225,11 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 {{< embed 01-eda.ipynb#var21 >}}
 
-### Demais variáveis
+## Demais variáveis
 
 - *var3*, *var15*, *var38*
 
-#### var3
+### var3
 
 - Valores faltantes:
     - Preenchidos com -999999
@@ -240,7 +243,7 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 {{< embed 01-eda.ipynb#var3 >}}
 
-#### var15
+### var15
 
 - Variável numérica (discreta)
     - Apenas valores inteiros e positivos
@@ -248,10 +251,97 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
     
 {{< embed 01-eda.ipynb#var15 >}}
 
-#### var38 
+### var38 
 
 - Variável numérica (contínua)
     - Apenas valores positivos
     - Composta apenas por decimais
     
 {{< embed 01-eda.ipynb#var38 >}}
+
+# 2 - Classificação
+
+## *Wrapper* de *pipelines*
+
+Uma função recebe o conjunto de treino, um *pipeline* de classificação e uma malha de hiperparâmetros, executa a sequência de *fit* do *wrapper* para então serializar e armazenar a instância da classe com *pickle* para uso posterior.
+
+- Sequência de *fit*:
+    1. Separa o conjunto de treino entre treino e validação
+    2. Treina o *pipeline* com *GridSearchCV* no conjunto de treino maximizando a ***AUC***
+    3. Ajusta o corte de classificação no conjunto de validação maximizando o lucro total (com os valores propostos no *case*)
+    4. Retreina o modelo com os melhores hiperparâmetros no conjunto de treino completo
+- Avaliação:
+    1. Já treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de teste
+    3. Calcula métricas de negócios
+    4. Calcula métricas de classificação
+- *Feature Importances*
+    1. Ainda treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de teste fazendo *shuffle* em cada variável de interesse diversas vezes
+    3. Para cada variável, calcula a diferença média na métrica de lucro total entre o conjunto original e o conjunto com a variável embaralhada
+    4. Ordena as variáveis pela diferença média e retorna o resultado em um *DataFrame*
+- Rankeamento:
+    1. Ainda treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de testes usando quocientes do corte de classificação
+
+{{< embed 00-support.ipynb#train-evaluate >}}
+
+## *Random Forest*
+
+O primeiro modelo testado foi o *Random Forest*. Após validação cruzada com *GridSearchCV*, o *pipeline* de classificação foi o seguinte:
+
+{{< embed 02-class.ipynb#rf-pipeline >}}
+
+Com número de estimadores fixado em 500 e *class_weight* em *balanced* (para arcar com o desbalanceamento), foram testados os seguintes hiperparâmetros:
+
+{{< embed 02-class.ipynb#rf-params >}}
+
+## *Histogram Based Gradient Boosting*
+
+O segundo modelo testado foi a implementação do *Gradient Boosting* de árvores baseado em histogramas do *sklearn*. Essa implementação é inspirada no *LightGBM*, e foi escolhida apenas por consistência.
+
+{{< embed 02-class.ipynb#hgb-pipeline >}}
+
+Para este classificador, foram testados os seguintes hiperparâmetros:
+
+{{< embed 02-class.ipynb#hgb-params >}}
+
+## Comparação entre os modelos
+
+Em termos de *machine learning*, a performance dos modelos é dada por:
+
+{{< embed 02-class.ipynb#compare-class >}}
+
+Já em termos de negócios:
+
+{{< embed 02-class.ipynb#compare-business >}}
+
+## Avaliação das *features* do modelo campeão
+
+### Todas as *features* positivas
+
+{{< embed 02-class.ipynb#feature-positive >}}
+
+### *Features* criadas
+
+{{< embed 02-class.ipynb#feature-custom >}}
+
+# 3 - Rankeamento de clientes
+
+Usando o mesmo objeto carregado anteriormente, rankeamos os clientes com base no quociente do corte de classificação.
+
+{{< embed 02-class.ipynb#ranking >}}
+
+# 4 - Análise de agrupamentos
+
+Antes realizar qualquer tipo de análise, recuperamos o modelo de classificação para atribuir o lucro de cada cliente da base de testes, mas concatenamos o conjunto de testes com o conjunto de treino, preenchendo o lucro de cada cliente deste com *np.nan* para que forneçam volume nos dados mas não causem viés na análise.
+
+{{< embed 03-cluster.ipynb#profit >}}
+
+## Processamento dos dados
+
+Como o conjunto é dado por variáveis numéricas, os algorítmos usados serão agrupamentos baseados em distância. Assim, torna-se necessário escalar os dados e reduzir a multicolinearidade, garantindo que o peso de uma variável não seja maior que o de outra. Assim, temos o seguinte *pipeline*:
+
+{{< embed 03-cluster.ipynb#prep >}}
+
+## Visualização das componentes principais

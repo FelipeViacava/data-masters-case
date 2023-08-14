@@ -77,7 +77,8 @@ class TrainEvaluate:
             param_grid=self.param_grid,
             scoring="roc_auc",
             n_jobs=self.njobs,
-            cv=skf
+            cv=skf,
+            verbose=3
         )
         grid_search = grid_search.fit(X_train, y_train)
         return grid_search

@@ -9,14 +9,17 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
     It drops constant columns from a pandas dataframe object.
     Important: the constant columns are found in the fit function and dropped in the transform function.
     """
-    def __init__(self, print_cols: bool = False, also: list[str] = []) -> None:
+    def __init__(self, print_cols: bool = False, thresh: float = None, search: Union[float, int] = None, ignore_prefix: list[str] = [], also: list[str] = []) -> None:
         """
         print_cols: default = False. Determine whether the fit function should print the constant columns' names.
-        ignore: list of columns to ignore.
+        thresh: default = None. If any value occurs more than this fraction of the total number of rows, the column is considered constant.
         Initiates the class.
         """
         self.print_cols = print_cols
         self.also = also
+        self.thresh = thresh
+        self.ignore_prefix = ignore_prefix
+        self.search = search
         pass
 
     def fit(self, X: pd.DataFrame , y: None = None) -> None:
@@ -29,10 +32,27 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
             col
             for col in X.columns
             if (
-                (X[col].nunique() == 1)
-                | (col in self.also)
+                ((X[col].nunique() == 1) | (col in self.also))
+                & ~any([col.startswith(prefix) for prefix in self.ignore_prefix])
             )
         ]
+        if self.thresh is not None:
+            self.constant_cols += [
+                col
+                for col in X.columns
+                if (
+                    (
+                        (
+                            X[col].value_counts(normalize=True).max()
+                            if self.search is not None
+                            else (X[col]==self.search).sum()/X.shape[0]
+                        )
+                        > self.thresh
+                    )
+                    & (~any([col.startswith(prefix) for prefix in self.ignore_prefix]))
+                )
+            ]
+
         if self.print_cols:
             print(f"{len(self.constant_cols)} constant columns were found.")
         return self
@@ -321,31 +341,17 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
             .apply(self._apply_map)
         return X_
     
-class PrefixScaler(BaseEstimator, TransformerMixin):
-    def __init__(self, prefixes, scaler, zero_heavy = False, ignore=[]):
-        self.prefixes = prefixes
-        self.scaler = scaler
-        self.ignore = ignore
-        self.zero_heavy = zero_heavy
+class CustomLog(BaseEstimator, TransformerMixin):
+    def __init__(self, columns: list[str] = []) -> None:
+        self.columns = columns
         pass
 
     def fit(self, X, y=None):
-        self.prefix_cols = [
-            col
-            for col in X.columns
-            if (
-                any([col.startswith(prefix) for prefix in self.prefixes])
-                & (col not in self.ignore)
-            )
-        ]
-        if self.zero_heavy:
-            X_ = X.copy().replace(0, np.nan)
-        else:
-            X_ = X.copy()
-        self.scaler = self.scaler.fit(X_[self.prefix_cols])
         return self
 
     def transform(self, X):
         X_ = X.copy()
-        X_[self.prefix_cols] = self.scaler.transform(X_[self.prefix_cols])
+        X_[self.columns] = np.log1p(
+            X_[self.columns] - X_[self.columns].min()
+        )
         return X_

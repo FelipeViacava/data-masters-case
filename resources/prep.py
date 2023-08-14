@@ -3,7 +3,6 @@ from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import \
     StandardScaler, \
-    RobustScaler, \
     OneHotEncoder
 from resources.customtransformers import \
     DropConstantColumns, \
@@ -13,7 +12,7 @@ from resources.customtransformers import \
     CustomImputer, \
     AddNoneCount, \
     CustomEncoder, \
-    PrefixScaler
+    CustomLog
 
 # --- Pipeline Building --- #
 from sklearn.pipeline import Pipeline
@@ -93,58 +92,47 @@ def build_prep() -> Pipeline:
     )
     return prep
 
-def build_prep_nan() -> Pipeline:
-    """
-    Builds base pipeline with nan imputation.
-    """
-    prep_nan = Pipeline(
+def build_prep_2() -> Pipeline:
+    prep = Pipeline(
         steps=[
             ("prep", build_prep()),
             ("NoneCountVar3", AddNoneCount(prefix="var3")),
+            ("drop_almost", DropConstantColumns(thresh=.99, ignore_prefix="ind")),
             ("nan", SimpleImputer(strategy="median"))
         ]
     )
-    return prep_nan
+    return prep
 
-def build_prep_cluster(n_comp=None):
-    cat_cols = ["var36", "var21"]
 
-    rbs_prefixes = [
-        "saldo",
-        "non_zero_count_saldo",
-        "sum_of_saldo",
-        "imp",
-        "non_zero_count_imp",
-        "sum_of_imp",
-        "delta",
-        "none_count_delta",
-        "sum_of_delta",
-        "non_zero_count_delta",
-        "non_zero_count_ind",
-        "num"
-        "non_zero_count_num",
-        "sum_of_num",
-        "var3",
-        "var15",
-    ]
-
-    ss_prefixes = [
-        "var38"
-    ]
-
+def build_prep_3(n_comp=None):
+    cat_cols = ["var36"]
     cat_tf = Pipeline(
         steps=[
             ("ohe", OneHotEncoder(min_frequency=100, sparse_output=False)),
-            ("ss", StandardScaler())
         ]
     )
 
+    log_vars = [
+        'saldo_var5',
+        'saldo_var30',
+        'saldo_var42',
+        'saldo_medio_var5_hace2',
+        'saldo_medio_var5_hace3',
+        'saldo_medio_var5_ult1',
+        'saldo_medio_var5_ult3',
+        'sum_of_saldo',
+        'var38',
+        'sum_of_num',
+        'non_zero_count_num'
+        ]
+
     prep = Pipeline(
         steps=[
-            ("base", build_prep()[:-2]),
-            ("rbs", PrefixScaler(rbs_prefixes, RobustScaler())),
-            ("ss", PrefixScaler(ss_prefixes, StandardScaler())),
+            ("prep", build_prep()[:-2]),
+            ("drop_almost", DropConstantColumns(thresh=.4, search=0)),
+            ("log", CustomLog(columns = log_vars)),
             ("cat",ColumnTransformer([("ohe", cat_tf, cat_cols)], remainder='passthrough')),
+            ("ss", StandardScaler()),
             ("knn", KNNImputer(n_neighbors=5)),
             ("pca", PCA(n_components=n_comp))
         ]

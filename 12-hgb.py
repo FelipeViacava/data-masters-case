@@ -23,10 +23,10 @@ hgb = Pipeline(
 )
 
 hgb_grid = {
-    "classifier__learning_rate": [.001, .003, .01, .03, .1, .3, 1],
-    "classifier__max_iter": [50, 75, 100, 125, 150, 200, 500, 1000],
-    "classifier__max_depth": [2, 3, 4, 5, 6, 8],
-    "classifier__l2_regularization": [0, .1, .3, 1, 3]
+    "classifier__learning_rate": [.01, .03, .1],
+    "classifier__max_iter": [150, 200, 250],
+    "classifier__max_depth": [3, 4, 5, 6, 8],
+    "classifier__l2_regularization": [.3, 1, 3, 10]
 }
 
 hgbc_model = build_model(

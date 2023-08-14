@@ -1,5 +1,5 @@
 import pandas as pd
-from resources.prep import build_prep_nan
+from resources.prep import build_prep_2
 from resources.train_evaluate import build_model
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import RandomForestClassifier
@@ -10,7 +10,7 @@ train = pd.read_csv("data/train.csv")
 
 rf = Pipeline(
     steps=[
-        ("preprocessor", build_prep_nan()),
+        ("preprocessor", build_prep_2()),
         (
             "classifier",
             RandomForestClassifier(
@@ -24,7 +24,7 @@ rf = Pipeline(
 
 rf_grid = {
     "classifier__max_depth": [4, 8, 16, 32],
-    "classifier__max_features": [8, 16, 32, 64, 96, 128],
+    "classifier__max_features": [8, 16, 32, 64],
 }
 
 rf_model = build_model(

@@ -35,7 +35,7 @@ def expl_var(evr) -> None:
     for label in ax2.get_yticklabels():
         label.set_color("g")
 
-    ax1.set_ylim([0, max(evr)*1.1]) #150
+    ax1.set_ylim([0, max(evr)*1.1])
     ax2.set_ylim([0, 1])
 
     ax1.set_xlim([0, 30])

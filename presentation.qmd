@@ -1,0 +1,398 @@
+---
+title: "Data Masters: Cientista de Dados"
+author: Felipe Viacava
+date: 2023-08-15
+format:
+    html:
+        theme: litera
+notebook-links: true
+jupyter: python3
+---
+# Introdução
+
+## Nesta apresentação
+
+1. Análise exploratória
+
+2. Modelo de classificação e Rankeamento
+
+3. Análise de agrupamentos
+
+## Scripts de auxílio
+
+Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-masters-case)
+
+- **Análise exploratória completa:** 01-eda.ipynb
+- **Modelos de classificação e rankeamento:** 02-class.ipynb
+- **Análise de agrupamentos:** 03-cluster.ipynb
+- ***Wrapper* de *pipelines* do *sklearn*:** resources/train_evaluate.py
+- **Transformadores customizados:** resources/customtransformers.py
+- ***Pipelines* de processamento de dados:** resources/prep.py
+- **Separação entre treino e teste:** resources/split.py
+- **Treinamento da *Random Forest*:** 11-rf.py
+- **Treinamento do *HGB*:** 12-hgb.py
+- **Treinar os modelos de classificação** run_train.sh
+- **Vizualização de dados:** resources/customviz.py
+- **Funções de auxílio da *EDA*:** resources/edautils.py
+
+## Premissas
+
+- Os dados fornecidos são suficientes para a solução do problema
+- Objetivo da classificação: maximizar lucro
+- Objetivo do rankeamento: maximizar lucro atuando apenas sobre o *rank* 1
+- Objetivo do agrupamento: identificar *clusters* e avaliá-los com base no lucro obtido na classificação
+
+# 1 - Análise exploratória
+
+- Separação prévia entre treino e teste
+- Nenhuma alteração definitiva nos dados
+- Auxílio na tomada de decisão para a classificação, o rankeamento e o agrupammento da base de clientes
+
+## Análise inicial
+
+- Colunas constantes
+- Colunas duplicadas
+- Sem valores faltantes 
+
+{{< embed 01-eda.ipynb#dupeconstdrop >}}
+
+### Transformadores customizados (exemplo)
+
+- Implementação em *pipelines* de processamento
+- Uso simples e fácil manutenção
+- Reutilização em outros projetos
+
+{{< embed 00-support.ipynb#customtransformers.py >}}
+
+## ID e TARGET
+
+- Entende-se ID como chave primária
+- Entende-se TARGET como variável de interesse
+
+{{< embed 01-eda.ipynb#id-target >}}
+
+## Saldo
+
+- Variáveis numéricas
+- Dados esparsos
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+{{< embed 01-eda.ipynb#saldo-describe >}}
+
+### Saldo: contagem de não-zeros 
+
+Clientes sem nenhum tipo de saldo parecem mais insatisfeitos.
+
+{{< embed 01-eda.ipynb#saldo-nonzero >}}
+
+### Saldo: soma total
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#saldo-sum >}}
+
+## Imp
+
+Mesmas observações que *saldo*.
+
+{{< embed 01-eda.ipynb#imp-describe >}} 
+
+### Imp: contagem de não-zeros
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#imp-nonzero >}}
+
+### Imp: soma total
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#imp-sum >}}
+
+## Delta
+
+- Valores faltantes
+- Variáveis numéricas
+- Dados ainda mais esparsos que *saldo* e *imp*
+- Variáveis criadas:
+    0. Contagem de valores nulos por cliente
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+{{< embed 01-eda.ipynb#delta-describe >}}
+
+Uma discussão mais profunda sobre o tema de valores faltantes e preprocessamento pode ser encontrada no notebook de origem do código acima.
+
+### Delta: valores faltantes
+
+Correlação na ocorrência mostra relação entre variáveis com nomes semelhantes (oportunidade de melhorias no projeto).
+    
+{{< embed 01-eda.ipynb#delta-missing >}}
+
+### Delta: contagem de valores faltantes
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#delta-missingcount >}}
+
+### Delta: contagem de não-zeros
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#delta-nonzero >}}
+
+### Delta: soma total
+
+Pouco poder de discriminação.
+
+{{< embed 01-eda.ipynb#delta-sum >}}
+
+## Ind
+
+- Variáveis binárias
+- Variável criada:
+    - Contagem de valores diferentes de 0 por cliente	
+
+{{< embed 01-eda.ipynb#ind-describe >}}
+
+### Ind: contagem de valores diferentes de 0
+
+Distribuições parecidas, mas com centros ligeiramente distantes. Não foram realizados testes de hipótese para validar a significância estatística deste (e de outros) deslocamento(s), o que poderia ser um ponto de melhoria no estudo.
+
+{{< embed 01-eda.ipynb#ind-nonzero >}}
+
+## Num
+
+- Variáveis numéricas discretas
+- Variáveis criadas:
+    1. Contagem de valores diferentes de 0 por cliente
+    2. Soma das colunas por cliente
+
+{{< embed 01-eda.ipynb#num-describe >}}
+
+### Num: contagem de não-zeros
+
+Aparenta ter bom poder de discriminação.
+
+{{< embed 01-eda.ipynb#num-nonzero >}}
+
+### Num: soma total
+
+Também aparenta ter bom poder de discriminação.
+
+{{< embed 01-eda.ipynb#num-sum >}}
+
+## Variáveis categóricas
+
+- *var36* e *var21*
+- Transformações:
+    - *Target Encoder* customizado para modelos de árvore:
+        - Ordenação por média da variável alvo
+        - Classes desconhecidas entram na categoria mais frequente
+    - *One Hot Encoding*:
+        - Classes pouco frequentes (n < 100) agrupadas em "outros"
+        - Classes desconhecidas entram na categoria mais frequente
+
+### var36
+
+- Proporções diferentes entre classes (inclusive frequentes)
+- Pode agregar poder de discriminação
+
+{{< embed 01-eda.ipynb#var36 >}}
+
+### var21
+
+Classes pouco frequentes: abordagem diferente para cada algorítmo. Nenhuma classe de proporção de insatisfeitos maior que a da classe mais frequente é populosa o suficiente nem tem proporção de insatisfeitos tão maior que a da classe mais frequente para ser considerada relevante.
+
+{{< embed 01-eda.ipynb#var21 >}}
+
+## Demais variáveis
+
+- *var3*, *var15*, *var38*
+
+### var3
+
+Outra variável que possui valores faltantes (-999999) e que também não parece ter poder de discriminação. Como lidar com estes valores varia entre o algorítmo implementado, como discutido anteriormente e no notebook de origem do código abaixo (seção de *delta*).
+
+{{< embed 01-eda.ipynb#var3-missing >}}
+
+Pela distribuição, aparenta ser uma variável numérica discreta com forte assimetria à direita.
+
+{{< embed 01-eda.ipynb#var3 >}}
+
+### var15
+
+Esta variável parece contínua mas tem apenas valores inteiros. Sua distribuição é bem diferente entre as classes da variável de interesse, podendo ser uma boa preditora.
+    
+{{< embed 01-eda.ipynb#var15 >}}
+
+### var38 
+
+Variável numérica com forte assimetria à direita. Seu poder de predição não parece tão forte quanto o de *var15*, mas pode ser muito útil na análise de _clusters_ por ter boa variabilidade.
+    
+{{< embed 01-eda.ipynb#var38 >}}
+
+# 2 - Classificação e *Rankeamento*
+
+## *Wrapper* de *pipelines*
+
+Uma função recebe o conjunto de treino, um *pipeline* de classificação e uma malha de hiperparâmetros, executa a sequência de *fit* do *wrapper* para então serializar e armazenar a instância da classe com *pickle* para uso posterior.
+
+- Sequência de *fit*:
+    1. Separa o conjunto de treino entre treino e validação
+    2. Treina o *pipeline* com *GridSearchCV* no conjunto de treino maximizando a ***AUC***
+    3. Ajusta o corte de classificação no conjunto de validação maximizando o lucro total (com os valores propostos no *case*)
+    4. Retreina o modelo com os melhores hiperparâmetros no conjunto de treino completo
+- Avaliação:
+    1. Já treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de teste
+    3. Calcula métricas de negócios
+    4. Calcula métricas de classificação
+- *Feature Importances*
+    1. Ainda treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de teste fazendo *shuffle* em cada variável de interesse diversas vezes
+    3. Para cada variável, calcula a diferença média na métrica de lucro total entre o conjunto original e o conjunto com a variável embaralhada
+    4. Ordena as variáveis pela diferença média e retorna o resultado em um *DataFrame*
+- Rankeamento:
+    1. Ainda treinado, recebe o conjunto de teste
+    2. Classifica o conjunto de testes usando quocientes do corte de classificação
+
+{{< embed 00-support.ipynb#train_evaluate.py >}}
+
+Além disso, um scipt para construção dos *pipelines* de processamento de dados foi criado para facilitar a manutenção e reutilização de código.
+
+{{< embed 00-support.ipynb#prep.py >}}
+
+## *Random Forest*
+
+O primeiro modelo testado foi o *Random Forest*. Após validação cruzada com *GridSearchCV*, o *pipeline* de classificação foi o seguinte:
+
+{{< embed 02-class.ipynb#rf-pipeline >}}
+
+Percebe-se que foi adicionado um passo para remover variáveis quase constantes. Por mais que pudessem agregar poder de discriminação, inflar o modelo com dados esparsos -- além de ser custoso computacionalmente -- obriga que o número de variáveis sorteadas por *split* seja aumentado para que o modelo consiga selecionar variáveis relevantes, o que pode levar a *overfitting*.
+
+Mesmo assim, o modelo ainda precisou de um número muito alto de variáveis aleatórias para conseguir selecionar as relevantes, o que pode ter prejudicado sua performance no conjunto de testes. Numa futura iteração deste estudo, o *thresh* do descartador de colunas poderia ser testado junto com os demais hiperparâmetros -- outra vantagem de trabalhar com transformadores customizados.
+
+Com número de estimadores fixado em 500 e *class_weight* em *balanced* (para arcar com o desbalanceamento), foram testados os seguintes hiperparâmetros:
+
+{{< embed 02-class.ipynb#rf-params >}}
+
+Sendo que o algoritmo que executou o treinamento foi o seguinte:
+
+{{< embed 00-support.ipynb#11-rf.py >}}
+
+## *Histogram Based Gradient Boosting*
+
+O segundo modelo testado foi a implementação do *Gradient Boosting* de árvores baseado em histogramas do *sklearn*. Essa implementação é inspirada no *LightGBM* e foi escolhida apenas por consistência.
+
+{{< embed 02-class.ipynb#hgb-pipeline >}}
+
+Para este classificador, foram testados os seguintes hiperparâmetros:
+
+{{< embed 02-class.ipynb#hgb-params >}}
+
+Sendo que o algoritmo que executou o treinamento foi o seguinte:
+
+{{< embed 00-support.ipynb#12-hgb.py >}}
+
+## Comparação entre os modelos
+
+Em termos de *machine learning*, a performance dos modelos é dada por:
+
+{{< embed 02-class.ipynb#compare-class >}}
+
+Já em termos de negócios:
+
+{{< embed 02-class.ipynb#compare-business >}}
+
+O modelo campeão é aquele que maximiza o lucro resultante da campanha, que é o objetivo do projeto. Assim, o modelo campeão é o *HGB*.
+A malha de hiperparâmetros passada para o *HBG* foi muito maior (11 vezes mais combinações), de modo que a comparação poderia ser considerada injusta. Contudo, é preciso considerar também o custo computacionalde cada modelo. Com o *HGB* discretizando as variáveis numéricas, a quantidade de splits testados é drasticamente reduzida, o que acelera o treinamento. Num cenário real onde treinar os modelos também acarreta custo, o *HGB* é ainda mais vantajoso.
+
+## Avaliação das *features* do modelo campeão
+
+### Todas as *features* positivas
+
+Como se pode perceber, foram poucas as variáveis que contribuíram positivamente para o modelo. Uma próxima etapa no desenvolvimento do modelo antes da implementação seria utilizar apenas estas variáveis, eliminando ruído e reduzindo o custo computacional envolvido. O modelo de *Random Forest* principalmente se beneficiaria muito desta redução, dada a sua natureza aleatória de sortear variáveis em cada split de cada árvore.
+
+{{< embed 02-class.ipynb#feature-positive >}}
+
+### *Features* criadas
+
+Percebe-se que de modo geral as *features* criadas contribuíram positivamente para o modelo, mostrando a importância da análise exploratória para o desenvolvimento do modelo mesmo sem conhecimento do que cada variável original representa.
+
+Algumas variáveis criadas se mostraram ruidosas, indicando que o modelo pode ter sido sobreajustado. Este comportamento também se repetiu em diversas variáveis originais (vide o documento original da classificação). Reduzir o número de features poderia ser uma solução, mas também seria interessante testar uma malha de hiperparâmetros com penalizações mais severas, principalmente considerando que a maior penalização testada foi a selecionada no *GridSearchCV*.
+
+{{< embed 02-class.ipynb#feature-custom >}}
+
+## Rankeamento de clientes
+
+Usando o mesmo modelo de *HGB* carregado anteriormente, os clientes foram rankeados com base na probabilidade de insatisfação. O corte de classificação do *rank* 1 é o mesmo do modelo em si, enquanto os demais são *steps* iguais entre 0 e o corte original.
+
+{{< embed 02-class.ipynb#ranking >}}
+
+# 3 - Análise de agrupamentos
+
+Antes realizar qualquer tipo de análise, recuperamos o modelo de classificação para atribuir o lucro de cada cliente da base de testes, mas concatenamos o conjunto de testes com o conjunto de treino, preenchendo o lucro de cada cliente deste com *np.nan* para que forneçam volume nos dados mas não causem viés na análise.
+
+{{< embed 03-cluster.ipynb#profit >}}
+
+## Processamento dos dados
+
+Como o conjunto é dado por variáveis numéricas, os algorítmos usados serão agrupamentos baseados em distância. Sem conhecimento do que realmente é cada variável, não é possível tomar decisões baseadas em conhecimento da área. 
+
+A primeira etapa para determinar o processamento dos dados e sua preparação para a *clusterização* foi recuperar o *pipeline* de processamento de dados usado na classificação e aplicá-lo novamente.
+
+{{< embed 03-cluster.ipynb#prep1 >}} 
+
+Em seguida, foi avaliada a esparsidade das features. A tabela abaixo mostra a quantidade de colunas em cada faixa de concentração (%) de valores iguais a zero.
+
+{{< embed 03-cluster.ipynb#sparse >}} 
+
+Como a faixa de 40% não possui nenhuma variável, este valor foi definido para reduzir o número de variáveis do modelo, permitindo uma análise mais minusciosa das restantes.
+
+{{< embed 03-cluster.ipynb#remaining >}}
+
+## Componentes Principais
+
+Após a seleção e análise das variáveis restantes, foi construído o seguinte *pipeline* de processamento de dados:
+
+{{< embed 03-cluster.ipynb#prep2 >}}
+
+Sendo o *scree plot* do PCA:
+
+{{< embed 03-cluster.ipynb#pca-evr >}}
+
+É importante ressaltar que embora a primeira componente explique muito bem a variabilidade do conjunto, foi necessário manter 9 componentes principais para que a variância explicada chegasse a 80% (valor comumente utilizado neste tipo de análise). Assim, a visualização dos dados não é tão simples.
+
+Abaixo, a distribuição das 3 componentes principais:
+
+{{< embed 03-cluster.ipynb#pca-dist >}}
+
+No gráfico de dispersão, vemos a distribuição da variável de interesse nas 3 componentes principais.
+
+{{< embed 03-cluster.ipynb#pca-scatter >}}
+
+## Agrupamentos com *K-Means*
+
+Datas as distribuições das 3 componentes principais, optou-se por utilizar o *K-Means* como algoritmo de agrupamento. Abaixo, temos o gráfico de cotovelo para determinar o número de *clusters*.
+
+{{< embed 03-cluster.ipynb#kmeans-elbow >}}
+
+Determinando o número de clusters como 9, temos a distribuição dos clientes nos *clusters*:
+
+{{< embed 03-cluster.ipynb#kmeans-scatter >}}
+
+Com os grupos ordenados por lucro, temos:
+
+{{< embed 03-cluster.ipynb#kmeans-profit >}}
+
+# Considerações finais
+
+Este estudo foi realizado com o objetivo de maximizar o lucro de uma campanha de retenção. Para isso, foram realizadas análises exploratórias, desenvolvidos modelos de classificação e rankeamento e realizada uma análise de agrupamentos naturais.
+Com conhecimento de mercado, seria possível usar os *clusters* para direcionar ações específicas para cada grupo de clientes, usando o modelo de classificação para determinar quais estariam de fato insatisfeitos. Nenhum modelo aqui estaria pronto para a produção e outros passos (como *feature selection* mais rigoroso e análise exploratória mais cuidadosa) poderiam ser adicionados para garantir a robustez do modelo final.
+Foi possível criar um modelo de classificação lucrativo e encontrar agrupamentos bem definidos, ainda criando margens de observação para clientes possivelmente insatisfeitos com base no rankeamento.
+Agradeço os envolvidos no processo pela oportunidade de participar do Data Masters e espero que este estudo gere boas discussões acerca do tema.
+
+*Felipe Viacava*

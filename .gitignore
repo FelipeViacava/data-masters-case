@@ -2,6 +2,3 @@ data
 dmc-venv
 junk
 models
-*.html
-*files*
-.vscode

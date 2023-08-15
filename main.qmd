@@ -14,11 +14,9 @@ jupyter: python3
 
 1. Análise exploratória
 
-2. Modelo de classificação
+2. Modelo de classificação e Rankeamento
 
-3. Rankeamento de clientes
-
-4. Análise de agrupamentos
+3. Análise de agrupamentos
 
 ## Scripts de auxílio
 
@@ -30,10 +28,10 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 - ***Wrapper* de *pipelines* do *sklearn*:** resources/train_evaluate.py
 - **Transformadores customizados:** resources/customtransformers.py
 - ***Pipelines* de processamento de dados:** resources/prep.py
+- **Separação entre treino e teste:** resources/split.py
 - **Treinamento da *Random Forest*:** 11-rf.py
 - **Treinamento do *HGB*:** 12-hgb.py
 - **Vizualização de dados:** resources/customviz.py
-- **Separação entre treino e teste:** resources/split.py
 - **Funções de auxílio da *EDA*:** resources/edautils.py
 
 ## Premissas
@@ -45,10 +43,9 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 # 1 - Análise exploratória
 
-- Separação entre treino e teste antes da EDA (*resources/split.py*)
+- Separação prévia entre treino e teste
 - Nenhuma alteração definitiva nos dados
-- Auxílio na tomada de decisão para os passos seguintes
-- Inspiração para criar transformadores customizados
+- Auxílio na tomada de decisão para a classificação, o rankeamento e o agrupammento
 
 ## Análise inicial
 
@@ -58,26 +55,25 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 {{< embed 01-eda.ipynb#dupeconstdrop >}}
 
-## Transformadores customizados
+### Transformadores customizados (exemplo)
 
 - Implementação em *pipelines* de processamento
 - Uso simples e fácil manutenção
-- Reutilização em outros projetos 
+- Reutilização em outros projetos
 
 {{< embed 00-support.ipynb#custom-transformers >}}
 
 ## ID e TARGET
+
+- Entende-se ID como chave primária
+- Entende-se TARGET como variável de interesse
 
 {{< embed 01-eda.ipynb#id-target >}}
 
 ## Saldo
 
 - Variáveis numéricas
-    - Muitos valores únicos
-    - Valores negativos
-    - *Floats*
-    - Prefixo
-- Dados esparsos, praticamente apenas 0s
+- Dados esparsos
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
     2. Soma das colunas por cliente
@@ -86,78 +82,69 @@ Repositório completo: [***GitHub***](https://www.github.com/felipeviacava/data-
 
 ### Saldo: contagem de não-zeros 
 
-- Clientes sem nenhum tipo de saldo parecem mais insatisfeitos
+Clientes sem nenhum tipo de saldo parecem mais insatisfeitos.
 
 {{< embed 01-eda.ipynb#saldo-nonzero >}}
 
 ### Saldo: soma total
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#saldo-sum >}}
 
 ## Imp
 
-- Variáveis numéricas
-    - Valores negativos
-    - *Floats*
-    - Prefixo
-- Dados esparsos, praticamente apenas 0s
-- Variáveis criadas:
-    1. Contagem de valores diferentes de 0 por cliente
-    2. Soma das colunas por cliente
+Mesmas observações que *saldo*.
 
 {{< embed 01-eda.ipynb#imp-describe >}} 
 
 ### Imp: contagem de não-zeros
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#imp-nonzero >}}
 
 ### Imp: soma total
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#imp-sum >}}
 
 ## Delta
 
 - Valores faltantes
-    - Preenchidos com 9999999999
-    - Classe criada para substituir com *np.nan*
-    - Abordagem diferente para cada algorítmo
 - Variáveis numéricas
-    - Valores negativos e _floats_
-    - Por *delta* e sufixos como *1y3* entende-se que é uma variação
 - Dados ainda mais esparsos que *saldo* e *imp*
 - Variáveis criadas:
+    0. Contagem de valores nulos por cliente
     1. Contagem de valores diferentes de 0 por cliente
     2. Soma das colunas por cliente
 
 {{< embed 01-eda.ipynb#delta-describe >}}
 
+Uma discussão mais profunda sobre o tema de valores faltantes e preprocessamento pode ser encontrada no notebook de origem do código acima.
+
 ### Delta: valores faltantes
 
-Correlação na ocorrência mostra relação entre variáveis com nomes semelhantes (oportunidade de melhorias no projeto)
+Correlação na ocorrência mostra relação entre variáveis com nomes semelhantes (oportunidade de melhorias no projeto).
     
 {{< embed 01-eda.ipynb#delta-missing >}}
 
 ### Delta: contagem de valores faltantes
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#delta-missingcount >}}
 
 ### Delta: contagem de não-zeros
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#delta-nonzero >}}
 
 ### Delta: soma total
 
-- Pouco poder de discriminação
+Pouco poder de discriminação.
 
 {{< embed 01-eda.ipynb#delta-sum >}}
 
@@ -171,16 +158,13 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 ### Ind: contagem de valores diferentes de 0
 
-- Distribuições próximas, mas com centros ligeiramente diferentes
+Distribuições parecidas, mas com centros ligeiramente distantes. Não foram realizados testes de hipótese para validar a significância estatística deste (e de outros) deslocamento(s), o que poderia ser um ponto de melhoria no estudo.
 
 {{< embed 01-eda.ipynb#ind-nonzero >}}
 
 ## Num
 
-- Variáveis numéricas (discretas)
-    - Apenas valores inteiros e positivos
-    - Prefixo sugere que são contagens e não categorias
-- Normalização com *RobustScaler*
+- Variáveis numéricas discretas
 - Variáveis criadas:
     1. Contagem de valores diferentes de 0 por cliente
     2. Soma das colunas por cliente
@@ -189,13 +173,13 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 ### Num: contagem de não-zeros
 
-- Distribuições diferentes
+Aparenta ter bom poder de discriminação.
 
 {{< embed 01-eda.ipynb#num-nonzero >}}
 
 ### Num: soma total
 
-- Distribuições próximas, mas com centros ligeiramente diferentes
+Também aparenta ter bom poder de discriminação.
 
 {{< embed 01-eda.ipynb#num-sum >}}
 
@@ -203,11 +187,11 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 - *var36* e *var21*
 - Transformações:
-    - *Target Encoder* customizado para modelos de árvore
+    - *Target Encoder* customizado para modelos de árvore:
         - Ordenação por média da variável alvo
-        - Classes desconhecidas entram na categoria mais frequente 
-    - *One Hot Encoding*
-        - Classes pouco frequentes agrupadas em "outros"
+        - Classes desconhecidas entram na categoria mais frequente
+    - *One Hot Encoding*:
+        - Classes pouco frequentes (n < 100) agrupadas em "outros"
         - Classes desconhecidas entram na categoria mais frequente
 
 ### var36
@@ -219,9 +203,7 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 ### var21
 
-- Proporções diferentes entre classes (inclusive frequentes)
-- Pode agregar poder de discriminação
-- Classes pouco frequentes: abordagem diferente para cada algorítmo
+Classes pouco frequentes: abordagem diferente para cada algorítmo. Nenhuma classe de proporção de insatisfeitos maior que a da classe mais frequente é populosa o suficiente nem tem proporção de insatisfeitos tão maior que a da classe mais frequente para ser considerada relevante.
 
 {{< embed 01-eda.ipynb#var21 >}}
 
@@ -231,35 +213,27 @@ Correlação na ocorrência mostra relação entre variáveis com nomes semelhan
 
 ### var3
 
-- Valores faltantes:
-    - Preenchidos com -999999
-    - Abordagem diferente para cada algorítmo
+Outra variável que possui valores faltantes (-999999) e que também não parece ter poder de discriminação. Como lidar com estes valores varia entre o algorítmo implementado, como discutido anteriormente e no notebook de origem do código abaixo (seção de *delta*).
 
 {{< embed 01-eda.ipynb#var3-missing >}}
 
-- Variável numérica (discreta)
-    - Muitos valores únicos
-    - Apenas valores inteiros e positivos
+Pela distribuição, aparenta ser uma variável numérica discreta com forte assimetria à direita.
 
 {{< embed 01-eda.ipynb#var3 >}}
 
 ### var15
 
-- Variável numérica (discreta)
-    - Apenas valores inteiros e positivos
-    - Muitos valores únicos
+Esta variável parece contínua mas tem apenas valores inteiros. Sua distribuição é bem diferente entre as classes da variável de interesse, podendo ser uma boa preditora.
     
 {{< embed 01-eda.ipynb#var15 >}}
 
 ### var38 
 
-- Variável numérica (contínua)
-    - Apenas valores positivos
-    - Composta apenas por decimais
+Variável numérica com forte assimetria à direita. Seu poder de predição não parece tão forte quanto o de *var15*, mas pode ser muito útil na análise de _clusters_ por ter boa variabilidade.
     
 {{< embed 01-eda.ipynb#var38 >}}
 
-# 2 - Classificação
+# 2 - Classificação e *Rankeamento*
 
 ## *Wrapper* de *pipelines*
 
@@ -286,25 +260,41 @@ Uma função recebe o conjunto de treino, um *pipeline* de classificação e uma
 
 {{< embed 00-support.ipynb#train-evaluate >}}
 
+Além disso, um scipt para construção dos *pipelines* de processamento de dados foi criado para facilitar a manutenção e reutilização de código.
+
+{{< embed 00-support.ipynb#prep >}}
+
 ## *Random Forest*
 
 O primeiro modelo testado foi o *Random Forest*. Após validação cruzada com *GridSearchCV*, o *pipeline* de classificação foi o seguinte:
 
 {{< embed 02-class.ipynb#rf-pipeline >}}
 
+Percebe-se que foi adicionado um passo para remover variáveis quase constantes. Por mais que pudessem agregar poder de discriminação, inflar o modelo com dados esparsos -- além de ser custoso computacionalmente -- obriga que o número de variáveis sorteadas por *split* seja aumentado para que o modelo consiga selecionar variáveis relevantes, o que pode levar a *overfitting*.
+
+Mesmo assim, o modelo ainda precisou de um número muito alto de variáveis aleatórias para conseguir selecionar as relevantes, o que pode ter prejudicado sua performance no conjunto de testes. Numa futura iteração deste estudo, o *thresh* do descartador de colunas poderia ser testado junto com os demais hiperparâmetros -- outra vantagem de trabalhar com transformadores customizados.
+
 Com número de estimadores fixado em 500 e *class_weight* em *balanced* (para arcar com o desbalanceamento), foram testados os seguintes hiperparâmetros:
 
 {{< embed 02-class.ipynb#rf-params >}}
 
+Sendo que o algoritmo que executou o treinamento foi o seguinte:
+
+{{< embed 00-support.ipynb#rf >}}
+
 ## *Histogram Based Gradient Boosting*
 
-O segundo modelo testado foi a implementação do *Gradient Boosting* de árvores baseado em histogramas do *sklearn*. Essa implementação é inspirada no *LightGBM*, e foi escolhida apenas por consistência.
+O segundo modelo testado foi a implementação do *Gradient Boosting* de árvores baseado em histogramas do *sklearn*. Essa implementação é inspirada no *LightGBM* e foi escolhida apenas por consistência.
 
 {{< embed 02-class.ipynb#hgb-pipeline >}}
 
 Para este classificador, foram testados os seguintes hiperparâmetros:
 
 {{< embed 02-class.ipynb#hgb-params >}}
+
+Sendo que o algoritmo que executou o treinamento foi o seguinte:
+
+{{< embed 00-support.ipynb#hgb >}}
 
 ## Comparação entre os modelos
 
@@ -316,19 +306,28 @@ Já em termos de negócios:
 
 {{< embed 02-class.ipynb#compare-business >}}
 
+O modelo campeão é aquele que maximiza o lucro resultante da campanha, que é o objetivo do projeto. Assim, o modelo campeão é o *HGB*.
+A malha de hiperparâmetros passada para o *HBG* foi muito maior (11 vezes mais combinações), de modo que a comparação poderia ser considerada injusta. Contudo, é preciso considerar também o custo computacionalde cada modelo. Com o *HGB* discretizando as variáveis numéricas, a quantidade de splits testados é drasticamente reduzida, o que acelera o treinamento. Num cenário real onde treinar os modelos também acarreta custo, o *HGB* é ainda mais vantajoso.
+
 ## Avaliação das *features* do modelo campeão
 
 ### Todas as *features* positivas
+
+Como se pode perceber, foram poucas as variáveis que contribuíram positivamente para o modelo. Uma próxima etapa no desenvolvimento do modelo antes da implementação seria utilizar apenas estas variáveis, eliminando ruído e reduzindo o custo computacional envolvido. O modelo de *Random Forest* principalmente se beneficiaria muito desta redução, dada a sua natureza aleatória de sortear variáveis em cada split de cada árvore.
 
 {{< embed 02-class.ipynb#feature-positive >}}
 
 ### *Features* criadas
 
+Dentre as *features* criadas, percebe-se que a maioria contribuiu positivamente para o modelo, mostrando a importância da análise exploratória para o desenvolvimento do modelo mesmo sem conhecimento do que cada variável original representa.
+
+Por outro lado, uma das variáveis criadas se mostrou ruidosa, indicando que o modelo pode ter sido sobreajustado. Este comportamento também se repetiu em diversas variáveis originais (vide o documento original da classificação). Reduzir o número de features poderia ser uma solução, mas também seria interessante testar uma malha de hiperparâmetros com penalizações mais severas, principalmente considerando que a maior penalização testada foi a selecionada no *GridSearchCV*.
+
 {{< embed 02-class.ipynb#feature-custom >}}
 
-# 3 - Rankeamento de clientes
+## Rankeamento de clientes
 
-Usando o mesmo objeto carregado anteriormente, rankeamos os clientes com base no quociente do corte de classificação.
+Usando o mesmo modelo de *HGB* carregado anteriormente, os clientes foram rankeados com base na probabilidade de insatisfação. O corte de classificação do *rank* 1 é o mesmo do modelo em si, enquanto os demais são *steps* iguais entre 0 e o corte original.
 
 {{< embed 02-class.ipynb#ranking >}}
 
@@ -340,8 +339,27 @@ Antes realizar qualquer tipo de análise, recuperamos o modelo de classificaçã
 
 ## Processamento dos dados
 
-Como o conjunto é dado por variáveis numéricas, os algorítmos usados serão agrupamentos baseados em distância. Assim, torna-se necessário escalar os dados e reduzir a multicolinearidade, garantindo que o peso de uma variável não seja maior que o de outra. Assim, temos o seguinte *pipeline*:
+Como o conjunto é dado por variáveis numéricas, os algorítmos usados serão agrupamentos baseados em distância. Sem conhecimento do que realmente é cada variável, não é possível tomar decisões baseadas em conhecimento da área. 
 
-{{< embed 03-cluster.ipynb#prep >}}
+A primeira etapa para determinar o processamento dos dados e sua preparação para a *clusterização* foi recuperar o *pipeline* de processamento de dados usado na classificação e aplicá-lo novamente.
 
-## Visualização das componentes principais
+{{< embed 03-cluster.ipynb#prep1 >}} 
+
+Em seguida, foi avaliada a esparsidade das features. A tabela abaixo mostra a quantidade de colunas em cada faixa de concentração de valores iguais a zero.
+
+{{< embed 03-cluster.ipynb#sparse >}} 
+
+Como a faixa de 40% não possui nenhuma variável, este valor foi definido para reduzir o número de variáveis do modelo, permitindo uma análise mais minusciosa das restantes.
+
+{{< embed 03-cluster.ipynb#remaining >}}
+
+## Componentes Principais
+
+Após a seleção e análise das variáveis restantes, foi construído o seguinte *pipeline* de processamento de dados:
+
+{{< embed 03-cluster.ipynb#prep2 >}}
+
+Sendo o *scree plot* do PCA:
+
+{{< embed 03-cluster.ipynb#pca-evr >}}
+

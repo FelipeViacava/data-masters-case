@@ -97,40 +97,42 @@ def build_prep_2() -> Pipeline:
         steps=[
             ("prep", build_prep()),
             ("NoneCountVar3", AddNoneCount(prefix="var3")),
-            ("drop_almost", DropConstantColumns(thresh=.99, ignore_prefix="ind")),
+            ("drop_almost", DropConstantColumns(thresh=.99, ignore_prefix=["ind"])),
             ("nan", SimpleImputer(strategy="median"))
         ]
     )
     return prep
 
-
-def build_prep_3(n_comp=None):
-    cat_cols = ["var36"]
-    cat_tf = Pipeline(
-        steps=[
-            ("ohe", OneHotEncoder(min_frequency=100, sparse_output=False)),
-        ]
-    )
-
-    log_vars = [
-        'saldo_var5',
+def build_prep_3(n_comp=None) -> Pipeline:
+    log_cols = [
+        'var3',
         'saldo_var30',
         'saldo_var42',
         'saldo_medio_var5_hace2',
         'saldo_medio_var5_hace3',
         'saldo_medio_var5_ult1',
         'saldo_medio_var5_ult3',
+        'num_var42_0',
         'sum_of_saldo',
         'var38',
         'sum_of_num',
-        'non_zero_count_num'
+        'non_zero_count_num',
+        'non_zero_count_ind'
+    ]
+    
+    cat_cols = ["var36"]
+
+    cat_tf = Pipeline(
+        steps=[
+            ("ohe", OneHotEncoder(min_frequency=100, sparse_output=False)),
         ]
+    )
 
     prep = Pipeline(
         steps=[
             ("prep", build_prep()[:-2]),
             ("drop_almost", DropConstantColumns(thresh=.4, search=0)),
-            ("log", CustomLog(columns = log_vars)),
+            ("log", CustomLog(columns = log_cols)),
             ("cat",ColumnTransformer([("ohe", cat_tf, cat_cols)], remainder='passthrough')),
             ("ss", StandardScaler()),
             ("knn", KNNImputer(n_neighbors=5)),

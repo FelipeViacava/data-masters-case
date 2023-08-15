@@ -28,27 +28,30 @@ class DropConstantColumns(BaseEstimator, TransformerMixin):
         y: Shouldn't be used. Only exists to prevent raise Exception due to accidental input in a pipeline.
         Creates class atributte with the names of the columns to be removed in the transform function.
         """
-        self.constant_cols = [
-            col
-            for col in X.columns
-            if (
-                ((X[col].nunique() == 1) | (col in self.also))
-                & ~any([col.startswith(prefix) for prefix in self.ignore_prefix])
-            )
-        ]
-        if self.thresh is not None:
-            self.constant_cols += [
+        if self.thresh is None:
+            self.constant_cols = [
                 col
                 for col in X.columns
                 if (
-                    (
-                        (
-                            X[col].value_counts(normalize=True).max()
-                            if self.search is not None
-                            else (X[col]==self.search).sum()/X.shape[0]
-                        )
-                        > self.thresh
-                    )
+                    ((X[col].nunique() == 1) | (col in self.also))
+                    & ~any([col.startswith(prefix) for prefix in self.ignore_prefix])
+                )
+            ]
+        elif self.search is None:
+            self.constant_cols = [
+                col
+                for col in X.columns
+                if (
+                    (X[col].value_counts(normalize=True).max() > self.thresh)
+                    & ~any([col.startswith(prefix) for prefix in self.ignore_prefix])
+                )
+            ]
+        else:
+            self.constant_cols = [
+                col
+                for col in X.columns
+                if (
+                    ((X[col]==self.search).sum()/X.shape[0] > self.thresh)
                     & (~any([col.startswith(prefix) for prefix in self.ignore_prefix]))
                 )
             ]

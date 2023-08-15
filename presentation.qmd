@@ -391,7 +391,9 @@ Com os grupos ordenados por lucro, temos:
 # Considerações finais
 
 Este estudo foi realizado com o objetivo de maximizar o lucro de uma campanha de retenção. Para isso, foram realizadas análises exploratórias, desenvolvidos modelos de classificação e rankeamento e realizada uma análise de agrupamentos naturais.
+
 Com conhecimento de mercado, seria possível usar os *clusters* para direcionar ações específicas para cada grupo de clientes, usando o modelo de classificação para determinar quais estariam de fato insatisfeitos. Nenhum modelo aqui estaria pronto para a produção e outros passos (como *feature selection* mais rigoroso e análise exploratória mais cuidadosa) poderiam ser adicionados para garantir a robustez do modelo final.
+
 Foi possível criar um modelo de classificação lucrativo e encontrar agrupamentos bem definidos, ainda criando margens de observação para clientes possivelmente insatisfeitos com base no rankeamento.
 Agradeço os envolvidos no processo pela oportunidade de participar do Data Masters e espero que este estudo gere boas discussões acerca do tema.
 

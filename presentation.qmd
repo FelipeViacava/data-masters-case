@@ -308,7 +308,7 @@ Já em termos de negócios:
 {{< embed 02-class.ipynb#compare-business >}}
 
 O modelo campeão é aquele que maximiza o lucro resultante da campanha, que é o objetivo do projeto. Assim, o modelo campeão é o *HGB*.
-A malha de hiperparâmetros passada para o *HBG* foi muito maior (11 vezes mais combinações), de modo que a comparação poderia ser considerada injusta. Contudo, é preciso considerar também o custo computacionalde cada modelo. Com o *HGB* discretizando as variáveis numéricas, a quantidade de splits testados é drasticamente reduzida, o que acelera o treinamento. Num cenário real onde treinar os modelos também acarreta custo, o *HGB* é ainda mais vantajoso.
+A malha de hiperparâmetros passada para o *HBG* foi muito maior, de modo que a comparação poderia ser considerada injusta. Contudo, é preciso considerar também o custo computacionalde cada modelo. Com o *HGB* discretizando as variáveis numéricas, a quantidade de splits testados é drasticamente reduzida, o que acelera o treinamento. Num cenário real onde treinar os modelos também acarreta custo, o *HGB* é ainda mais vantajoso.
 
 ## Avaliação das *features* do modelo campeão
 

@@ -1,4 +1,5 @@
 data
-dmc-venv
-junk
-models
+/dmc-venv/
+/junk/
+/models/
+/.quarto/
